@@ -72,7 +72,7 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
   }
 
   function onFrame() {
-    executeFrameCallbacks(getElapsedTime());
+    executeFrameCallbacks(getDeltaTime());
     tick();
 
     if(running) {
@@ -80,16 +80,16 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     }
   }
 
-  function executeFrameCallbacks(elapsed) {
+  function executeFrameCallbacks(deltaTime) {
     var items = registeredCallbacks.items,
       numCallbacks = items.length,
       i;
     for(i = 0; i < numCallbacks; i++) {
-      items[i](elapsed);
+      items[i](deltaTime);
     }
   }
 
-  function getElapsedTime() {
+  function getDeltaTime() {
     var now = +new Date(),
       elapsed = (now - lastUpdateTime) / ONE_SECOND;
 

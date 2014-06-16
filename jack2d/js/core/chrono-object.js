@@ -6,11 +6,8 @@ jack2d('chronoObject', ['helper', 'chrono'], function(helper, chrono) {
   'use strict';
 
   return {
-    chrono: chrono,
     onFrame: function(func) {
-      if(!this.chronoId) {
-        this.chronoId = chrono.register(helper.call(this, func));
-      }
+      this.chronoId = chrono.register(helper.call(this, func), this.chronoId);
       return this;
     }
   };

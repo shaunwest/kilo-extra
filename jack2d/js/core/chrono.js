@@ -40,9 +40,16 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     return obj;
   }
 
-  function register(callback) {
-    var id = lastRegisteredId++;
-    registeredCallbacks.add(id, callback);
+  function register(callback, id) {
+    var callbacks;
+    if(!id) {
+      id = lastRegisteredId++;
+      callbacks = [];
+      registeredCallbacks.add(id, callbacks);
+    } else {
+      callbacks = registeredCallbacks.get(id);
+    }
+    callbacks.push(callback);
     return id;
   }
 
@@ -82,10 +89,16 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
 
   function executeFrameCallbacks(deltaTime) {
     var items = registeredCallbacks.items,
-      numCallbacks = items.length,
-      i;
-    for(i = 0; i < numCallbacks; i++) {
-      items[i](deltaTime);
+      numItems = items.length,
+      numCallbacks,
+      item,
+      i, j;
+    for(i = 0; i < numItems; i++) {
+      item = items[i];
+      numCallbacks = item.length;
+      for(j = 0; j < numCallbacks; j++) {
+        item[j](deltaTime);
+      }
     }
   }
 

@@ -6,6 +6,6 @@ jack2d('inputFactory', ['helper', 'input'], function(helper, input) {
   'use strict';
 
   return function(inputScheme) {
-    return helper.clone(input).setScheme(inputScheme);
+    return helper.clone(input).setControlScheme(inputScheme);
   };
 });

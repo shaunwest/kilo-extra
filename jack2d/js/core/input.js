@@ -2,9 +2,7 @@
  * Created by Shaun on 6/8/14.
  */
 
-
-// WARNING: drunk code
-jack2d('input', ['chrono'], function(chrono) {
+jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
   'use strict';
 
   var MAX_SEQUENCE_TIME = 0.5,
@@ -25,22 +23,6 @@ jack2d('input', ['chrono'], function(chrono) {
     window.addEventListener("touchend", onTouchEnd);
 
     chrono.register(update);
-  }
-
-  function setScheme(scheme) {
-    var actionName, action;
-    for(actionName in scheme) {
-      if(scheme.hasOwnProperty(actionName)) {
-        action = scheme[actionName];
-        if(action.key) {
-          keys[action.key] = actionName;
-        }
-        if(action.element) {
-          elements[actionName] = action.element;
-        }
-      }
-    }
-    return publicMethods;
   }
 
   function onKeyDown(event) {
@@ -83,16 +65,11 @@ jack2d('input', ['chrono'], function(chrono) {
     }
   }
 
-  function flushSequence() {
-    sequence.length = 0;
-    return publicMethods;
-  }
-
   function update(deltaTime) {
     executeInputCallbacks(deltaTime);
 
     if(timeSinceInput > MAX_SEQUENCE_TIME) {
-      flushSequence();
+      publicMethods.flushSequence();
     } else {
       executeSequenceCallbacks();
     }
@@ -132,14 +109,32 @@ jack2d('input', ['chrono'], function(chrono) {
   }
 
   var publicMethods = {
-    setScheme: setScheme,
+    setControlScheme: function(scheme) {
+      var actionName, action;
+      for(actionName in scheme) {
+        if(scheme.hasOwnProperty(actionName)) {
+          action = scheme[actionName];
+          if(action.key) {
+            keys[action.key] = actionName;
+          }
+          if(action.element) {
+            elements[actionName] = action.element;
+          }
+        }
+      }
+      return this;
+    },
+    flushSequence: function() {
+      sequence.length = 0;
+      return this;
+    },
     onInput: function(callback) {
-      inputCallbacks.push(callback);
-      return publicMethods;
+      inputCallbacks.push(helper.call(this, callback));
+      return this;
     },
     onKeySequence: function(targetSequence, callback) {
       sequenceCallbacks.push([targetSequence, callback]);
-      return publicMethods;
+      return this;
     }
   };
 

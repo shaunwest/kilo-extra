@@ -12,17 +12,32 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     inputCallbacks = [],
     sequence = [],
     sequenceCallbacks = [],
-    timeSinceInput = 0;
+    timeSinceInput = 0,
+    chronoId = 0;
 
   init();
 
   function init() {
+    if(chronoId) {
+      return;
+    }
+
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
     window.addEventListener("touchstart", onTouchStart);
     window.addEventListener("touchend", onTouchEnd);
 
-    chrono.register(update);
+    chronoId = chrono.register(update);
+  }
+
+  function deinit() {
+    window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keyup', onKeyUp);
+    window.removeEventListener("touchstart", onTouchStart);
+    window.removeEventListener("touchend", onTouchEnd);
+
+    chrono.unregister(chronoId);
+    chronoId = 0;
   }
 
   function onKeyDown(event) {
@@ -135,7 +150,15 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     onKeySequence: function(targetSequence, callback) {
       sequenceCallbacks.push([targetSequence, callback]);
       return this;
-    }
+    },
+    getInputs: function() {
+      return inputs;
+    },
+    getSequence: function() {
+      return sequence;
+    },
+    deinit: deinit,
+    reinit: init
   };
 
   return publicMethods;

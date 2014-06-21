@@ -123,6 +123,9 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     }
   }
 
+  // FIXME: input should have per object state
+  // currently, input can be manipulated by any
+  // given object that uses the input object
   var publicMethods = {
     setControlScheme: function(scheme) {
       var actionName, action;

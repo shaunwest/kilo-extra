@@ -49,7 +49,12 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     } else {
       callbacks = registeredCallbacks.get(id);
     }
-    callbacks.push(callback);
+    if(callbacks) {
+      callbacks.push(callback);
+    } else {
+      console.error('Jack2d: chrono id \''+ id + '\' not found.');
+    }
+
     return id;
   }
 
@@ -60,6 +65,10 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
 
   function requestNextFrame() {
     frameTimerId = window.requestAnimationFrame(onFrame);
+  }
+
+  function registeredCount() {
+    return registeredCallbacks.size();
   }
 
   function start() {
@@ -129,21 +138,25 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     return elapsedSeconds;
   }
 
+  // TODO: consider removing
   function getWholeMultiplier() {
     return wholeMultiplier;
   }
 
+  // TODO: consider removing
   function getTenthMultiplier() {
     return tenthMultiplier;
   }
 
   obj = {
+    __mixin: false,
     init: init,
     reset: reset,
     start: start,
     stop: stop,
     register: register,
     unRegister: unRegister,
+    registeredCount: registeredCount,
     getFps: getFps,
     getSeconds: getSeconds,
     getWholeMultiplier: getWholeMultiplier,

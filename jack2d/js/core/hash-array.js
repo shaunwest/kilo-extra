@@ -43,5 +43,9 @@ jack2d('HashArray', [], function() {
     }
   };
 
+  HashArray.prototype.size = function() {
+    return this.items.length;
+  };
+
   return HashArray;
 });

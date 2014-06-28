@@ -5,7 +5,9 @@
 jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
   'use strict';
 
-  var MAX_SEQUENCE_TIME = 0.5,
+  var MODE_TOUCH = 'touch',
+    MODE_MOUSE = 'mouse',
+    MAX_SEQUENCE_TIME = 0.5,
     keys = {},
     elements = {},
     inputs = {},
@@ -13,6 +15,11 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     sequence = [],
     sequenceCallbacks = [],
     timeSinceInput = 0,
+    mode = MODE_MOUSE,
+    /*interactStart = 'touchstart',
+    interactEnd = 'touchend',*/
+    interactStart = 'mousedown',
+    interactEnd = 'mouseup',
     chronoId = 0;
 
   init();
@@ -24,8 +31,8 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
 
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
-    window.addEventListener("touchstart", onTouchStart);
-    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener(interactStart, onTouchStart);
+    window.addEventListener(interactEnd, onTouchEnd);
 
     chronoId = chrono.register(update);
   }
@@ -33,11 +40,26 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
   function deinit() {
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
-    window.removeEventListener("touchstart", onTouchStart);
-    window.removeEventListener("touchend", onTouchEnd);
+    window.removeEventListener(interactStart, onTouchStart);
+    window.removeEventListener(interactEnd, onTouchEnd);
 
     chrono.unregister(chronoId);
     chronoId = 0;
+  }
+
+  function setMode(value) {
+    mode = value;
+    deinit();
+
+    if(mode === MODE_TOUCH) {
+      interactStart = 'touchstart';
+      interactEnd = 'touchend';
+    } else {
+      interactStart = 'mousedown';
+      interactEnd = 'mouseup';
+    }
+
+    init();
   }
 
   function onKeyDown(event) {
@@ -56,13 +78,13 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
   }
 
   function onTouchStart(event) {
-    var touch = event.touches[0];
+    var target = (mode === MODE_TOUCH) ? event.touches[0].target : event.target;
 
     event.preventDefault();
 
     for(var actionName in elements) {
       if(elements.hasOwnProperty(actionName)) {
-        if(touch.target === elements[actionName]) {
+        if(target === elements[actionName]) {
           inputs[actionName] = true;
         }
       }
@@ -84,7 +106,7 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     executeInputCallbacks(deltaTime);
 
     if(timeSinceInput > MAX_SEQUENCE_TIME) {
-      publicMethods.flushSequence();
+      publicMethods.flushSequence(); // TODO: is this even right?
     } else {
       executeSequenceCallbacks();
     }
@@ -161,7 +183,11 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
       return sequence;
     },
     deinit: deinit,
-    reinit: init
+    reinit: function() {
+      deinit();
+      init();
+    },
+    setMode: setMode
   };
 
   return publicMethods;

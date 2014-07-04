@@ -20,8 +20,12 @@ jack2d('HashArray', [], function() {
   }
 
   HashArray.prototype.add = function(id, value) {
-    this.items.push(value);
-    this.idMap[id] = this.items.length - 1;
+    if(this.idMap[id]) {
+      this.items[this.idMap[id]] = value;
+    } else {
+      this.items.push(value);
+      this.idMap[id] = this.items.length - 1;
+    }
   };
 
   HashArray.prototype.get = function(id) {

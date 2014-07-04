@@ -2,29 +2,39 @@
  * Created by Shaun on 6/8/14.
  */
 
-jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
+jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeyStore) {
   'use strict';
 
   var MODE_TOUCH = 'touch',
     MODE_MOUSE = 'mouse',
+    INTERACT_ID = 'interact',
     MAX_SEQUENCE_TIME = 0.5,
-    keys = {},
-    elements = {},
-    inputs = {},
-    inputCallbacks = [],
-    sequence = [],
-    sequenceCallbacks = [],
-    timeSinceInput = 0,
-    mode = MODE_MOUSE,
-    /*interactStart = 'touchstart',
-    interactEnd = 'touchend',*/
-    interactStart = 'mousedown',
-    interactEnd = 'mouseup',
-    chronoId = 0;
+    inputs,
+    sequence,
+    timeSinceInput,
+    inputUpdateCallbacks,
+    sequenceCallbacks,
+    mode,
+    inputReleased,
+    interactStart,
+    interactEnd,
+    chronoId;
 
   init();
 
   function init() {
+    inputs = {};
+    sequence = [];
+    timeSinceInput = 0;
+    inputUpdateCallbacks = new KeyStore();
+    sequenceCallbacks = new KeyStore();
+    mode = MODE_MOUSE;
+    inputReleased = false;
+    /*interactStart = 'touchstart';
+     interactEnd = 'touchend';*/
+    interactStart = 'mousedown';
+    interactEnd = 'mouseup';
+
     if(chronoId) {
       return;
     }
@@ -47,6 +57,8 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     chronoId = 0;
   }
 
+  // FIXME: there should be an injectable module that says whether we're
+  // on mobile or not and set the mode accordingly before init()
   function setMode(value) {
     mode = value;
     deinit();
@@ -63,117 +75,94 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
   }
 
   function onKeyDown(event) {
-    if(keys[event.keyCode]) {
-      inputs[keys[event.keyCode]] = true;
-    }
+    inputs[event.keyCode] = event;
   }
 
   function onKeyUp(event) {
-    var actionName = keys[event.keyCode];
-    if(actionName) {
-      inputs[actionName] = false;
-      timeSinceInput = 0;
-      sequence.push(actionName);
-    }
+    var keyCode = event.keyCode;
+    delete inputs[keyCode];
+    timeSinceInput = 0;
+    inputReleased = true;
+    sequence.push(keyCode);
   }
 
   function onTouchStart(event) {
-    var target = (mode === MODE_TOUCH) ? event.touches[0].target : event.target;
+    //var target = (mode === MODE_TOUCH) ? event.touches[0].target : event.target;
+    var interaction = (mode === MODE_TOUCH) ? event.touches[0] : event;
 
     event.preventDefault();
-
-    for(var actionName in elements) {
-      if(elements.hasOwnProperty(actionName)) {
-        if(target === elements[actionName]) {
-          inputs[actionName] = true;
-        }
-      }
-    }
+    inputs[INTERACT_ID] = interaction;
   }
 
   function onTouchEnd(event) {
     event.preventDefault();
-
-    // FIXME: this cancels ALL touches
-    for(var actionName in elements) {
-      if(elements.hasOwnProperty(actionName)) {
-        inputs[actionName] = false;
-      }
-    }
+    inputReleased = true;
+    delete inputs[INTERACT_ID];
   }
 
   function update(deltaTime) {
-    executeInputCallbacks(deltaTime);
-
     if(timeSinceInput > MAX_SEQUENCE_TIME) {
-      publicMethods.flushSequence(); // TODO: is this even right?
-    } else {
-      executeSequenceCallbacks();
+      flushSequence();
+    } else if(sequence.length) {
+      executeSequenceCallbacks(deltaTime);
     }
 
+    if(Object.keys(inputs).length || inputReleased) {
+      executeInputCallbacks(deltaTime);
+      inputReleased = false;
+    }
     timeSinceInput += deltaTime;
   }
 
   function executeInputCallbacks(deltaTime) {
-    var numInputCallbacks = inputCallbacks.length,
-      i;
+    var items = inputUpdateCallbacks.getItems(),
+      numItems = items.length,
+      numCallbacks,
+      item,
+      i, j;
 
-    for(i = 0; i < numInputCallbacks; i++) {
-      inputCallbacks[i](inputs, deltaTime);
-    }
-  }
-
-  function executeSequenceCallbacks() {
-    var numSequenceCallbacks = sequenceCallbacks.length,
-      i;
-
-    for(i = 0; i < numSequenceCallbacks; i++) {
-      executeSequenceCallback(sequenceCallbacks[i]);
-    }
-  }
-
-  function executeSequenceCallback(sequenceCallback) {
-    var targetSequence = sequenceCallback[0],
-      callback = sequenceCallback[1],
-      sequenceLength = targetSequence.length,
-      i;
-
-    for(i = 0; i < sequenceLength; i++) {
-      if(targetSequence[i] !== sequence[i]) {
-        callback();
+    for(i = 0; i < numItems; i++) {
+      item = items[i];
+      numCallbacks = item.length;
+      for(j = 0; j < numCallbacks; j++) {
+        item[j](inputs, deltaTime);
       }
     }
   }
 
-  // FIXME: input should have per object state
-  // currently, input can be manipulated by any
-  // given object that uses the input object
-  var publicMethods = {
-    setControlScheme: function(scheme) {
-      var actionName, action;
-      for(actionName in scheme) {
-        if(scheme.hasOwnProperty(actionName)) {
-          action = scheme[actionName];
-          if(action.key) {
-            keys[action.key] = actionName;
-          }
-          if(action.element) {
-            elements[actionName] = action.element;
-          }
-        }
+  function executeSequenceCallbacks(deltaTime) {
+    var items = sequenceCallbacks.getItems(),
+      numItems = items.length,
+      numCallbacks,
+      item,
+      i, j;
+
+    for(i = 0; i < numItems; i++) {
+      item = items[i];
+      numCallbacks = item.length;
+      for(j = 0; j < numCallbacks; j++) {
+        item[j](sequence, deltaTime);
       }
+    }
+  }
+
+  function flushSequence() {
+    sequence.length = 0;
+  }
+
+  return {
+    onInputUpdate: function(callback, id) {
+      return inputUpdateCallbacks.setGroup(id, callback);
+    },
+    cancelOnInputUpdate: function(id) {
+      inputUpdateCallbacks.clear(id);
       return this;
     },
-    flushSequence: function() {
-      sequence.length = 0;
-      return this;
+    onKeySequence: function(callback, id) {
+      return sequenceCallbacks.setGroup(id, callback);
     },
-    onInput: function(callback) {
-      inputCallbacks.push(helper.call(this, callback));
-      return this;
-    },
-    onKeySequence: function(targetSequence, callback) {
-      sequenceCallbacks.push([targetSequence, callback]);
+    cancelOnKeySequence: function(id) {
+      sequenceCallbacks.clear(id);
       return this;
     },
     getInputs: function() {
@@ -182,13 +171,24 @@ jack2d('input', ['helper', 'chrono'], function(helper, chrono) {
     getSequence: function() {
       return sequence;
     },
-    deinit: deinit,
+    flushSequence: function() {
+      flushSequence();
+      return this;
+    },
+    deinit: function() {
+      deinit();
+      return this;
+    },
     reinit: function() {
       deinit();
       init();
+      return this;
     },
-    setMode: setMode
+    setMode: setMode,
+    LEFT: 37,
+    UP: 38,
+    RIGHT: 39,
+    DOWN: 40,
+    INTERACT: INTERACT_ID
   };
-
-  return publicMethods;
 });

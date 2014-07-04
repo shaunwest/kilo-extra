@@ -2,10 +2,10 @@
  * Created by Shaun on 6/22/14.
  */
 
-jack2d('grid', ['helper', 'chronoObject'], function(helper, chronoObject) {
+jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoObject) {
   'use strict';
 
-  return helper.mixin(chronoObject, {
+  return obj.mixin(chronoObject, {
     __mixin: true,
     setDimensions: function(cellSize, gridWidth, gridHeight) {
       this.cellSize = cellSize;

@@ -26,7 +26,7 @@ jack2d('actionObject', ['input', 'helper'], function(input, helper) {
 
       this.inputId = input.onInputUpdate(helper.call(this, onInputUpdate), this.inputId);
 
-      function onInputUpdate(inputs) {
+      function onInputUpdate(inputs, ended) {
         var numKeyActions = keyActions.length,
           keyAction,
           i;

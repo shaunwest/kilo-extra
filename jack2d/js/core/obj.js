@@ -2,18 +2,29 @@
  * Created by Shaun on 6/28/14.
  */
 
-jack2d('obj', ['injector', 'helper'], function(injector, helper) {
+jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
   'use strict';
 
   return {
     clone: function(object) {
-      var newObject = {};
-      for(var prop in object) {
+      /*var prop, newObject = {};
+      for(prop in object) {
         if(object.hasOwnProperty(prop)) {
           newObject[prop] = object[prop];
         }
       }
-      return newObject;
+      return newObject;*/
+      return this.merge(object);
+    },
+    merge: function(source, destination) {
+      var prop;
+      destination = destination || {};
+      for(prop in source) {
+        if(source.hasOwnProperty(prop)) {
+          destination[prop] = source[prop];
+        }
+      }
+      return destination;
     },
     create: function(source) {
       return this.mixin(source);
@@ -27,8 +38,18 @@ jack2d('obj', ['injector', 'helper'], function(injector, helper) {
       }
       return str;
     },
-    mixin: function(giver, reciever, exceptionOnCollisions) {
+    clear: function(obj) {
+      var prop;
+      for(prop in obj) {
+        if(obj.hasOwnProperty(prop)) {
+          delete obj[prop];
+        }
+      }
+    },
+    mixin: function(giver, reciever, allowWrap, exceptionOnCollisions) {
       reciever = reciever || {};
+      allowWrap = helper.def(allowWrap, true);
+
       if(helper.isArray(giver)) {
         giver.forEach(function(obj) {
           if(helper.isString(obj)) {
@@ -43,10 +64,10 @@ jack2d('obj', ['injector', 'helper'], function(injector, helper) {
         mergeObjects(giver, reciever);
       }
 
-      function mergeObjects(giver, reciever) {
+      function mergeObjects(giver, receiver) {
         giver = giver || {};
         if(giver.__mixin === false) {
-          console.log('Jack2d: Can\'t mixin object because it\'s disallowed.');
+          console.log('Jack2d: Can\'t mixin object because the object has disallowed it.');
           return;
         }
         Object.keys(giver).forEach(function(prop) {
@@ -54,15 +75,21 @@ jack2d('obj', ['injector', 'helper'], function(injector, helper) {
             // we don't want to merge state, so
             // only allow functions.
             return;
-          } else if(reciever.hasOwnProperty(prop)) {
-            if(exceptionOnCollisions) {
+          }
+          if(receiver.hasOwnProperty(prop)) {
+            if(allowWrap) {
+              receiver[prop] = func.wrap(giver[prop], receiver[prop]);
+              console.log('Jack2d: Wrapped \'' + prop + '\'');
+            } else if(exceptionOnCollisions) {
               helper.error('Jack2d: Failed to merge mixin. Method \'' +
                 prop + '\' caused a name collision.');
             } else {
+              receiver[prop] = giver[prop];
               console.log('Jack2d: Merged \'' + prop + '\'');
             }
+          } else {
+            receiver[prop] = giver[prop];
           }
-          reciever[prop] = giver[prop];
         });
       }
       return reciever;

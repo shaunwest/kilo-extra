@@ -2,7 +2,7 @@
  * Created by Shaun on 6/8/14.
  */
 
-jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeyStore) {
+jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, chrono, KeyStore) {
   'use strict';
 
   var MODE_TOUCH = 'touch',
@@ -10,23 +10,28 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
     INTERACT_ID = 'interact',
     MAX_SEQUENCE_TIME = 0.5,
     inputs,
+    inputsEnded,
     sequence,
     timeSinceInput,
     inputUpdateCallbacks,
+    //inputUpdateEndCallbacks,
     sequenceCallbacks,
     mode,
     inputReleased,
     interactStart,
     interactEnd,
+    interactMove,
     chronoId;
 
   init();
 
   function init() {
     inputs = {};
+    inputsEnded = {};
     sequence = [];
     timeSinceInput = 0;
     inputUpdateCallbacks = new KeyStore();
+    //inputUpdateEndCallbacks = new KeyStore();
     sequenceCallbacks = new KeyStore();
     mode = MODE_MOUSE;
     inputReleased = false;
@@ -34,6 +39,7 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
      interactEnd = 'touchend';*/
     interactStart = 'mousedown';
     interactEnd = 'mouseup';
+    interactMove = 'mousemove';
 
     if(chronoId) {
       return;
@@ -43,6 +49,7 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
     window.addEventListener('keyup', onKeyUp);
     window.addEventListener(interactStart, onTouchStart);
     window.addEventListener(interactEnd, onTouchEnd);
+    window.addEventListener(interactMove, onTouchMove);
 
     chronoId = chrono.register(update);
   }
@@ -52,6 +59,7 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener(interactStart, onTouchStart);
     window.removeEventListener(interactEnd, onTouchEnd);
+    window.removeEventListener(interactMove, onTouchMove);
 
     chrono.unregister(chronoId);
     chronoId = 0;
@@ -80,9 +88,9 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
 
   function onKeyUp(event) {
     var keyCode = event.keyCode;
+    inputsEnded[keyCode] = event;
     delete inputs[keyCode];
     timeSinceInput = 0;
-    inputReleased = true;
     sequence.push(keyCode);
   }
 
@@ -94,9 +102,17 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
     inputs[INTERACT_ID] = interaction;
   }
 
-  function onTouchEnd(event) {
+  function onTouchMove(event) {
+    var interaction = (mode === MODE_TOUCH) ? event.touches[0] : event;
+    if(!inputs[INTERACT_ID]) {
+      return;
+    }
     event.preventDefault();
-    inputReleased = true;
+    inputs[INTERACT_ID] = interaction;
+  }
+
+  function onTouchEnd(event) {
+    inputsEnded[INTERACT_ID] = inputs[INTERACT_ID];
     delete inputs[INTERACT_ID];
   }
 
@@ -107,15 +123,21 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
       executeSequenceCallbacks(deltaTime);
     }
 
-    if(Object.keys(inputs).length || inputReleased) {
-      executeInputCallbacks(deltaTime);
-      inputReleased = false;
+    if(Object.keys(inputs).length) {
+      executeInputCallbacks(inputUpdateCallbacks, deltaTime);
+    } else if(Object.keys(inputsEnded).length) {
+      executeInputCallbacks(inputUpdateCallbacks, deltaTime);
+      obj.clear(inputsEnded);
     }
+    /*if(inputReleased) {
+      executeInputCallbacks(inputUpdateEndCallbacks, deltaTime);
+      inputReleased = false;
+    }*/
     timeSinceInput += deltaTime;
   }
 
-  function executeInputCallbacks(deltaTime) {
-    var items = inputUpdateCallbacks.getItems(),
+  function executeInputCallbacks(callbacks, deltaTime) {
+    var items = callbacks.getItems(),
       numItems = items.length,
       numCallbacks,
       item,
@@ -125,7 +147,7 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
       item = items[i];
       numCallbacks = item.length;
       for(j = 0; j < numCallbacks; j++) {
-        item[j](inputs, deltaTime);
+        item[j](inputs, inputsEnded, deltaTime);
       }
     }
   }
@@ -154,6 +176,9 @@ jack2d('input', ['helper', 'chrono', 'KeyStore'], function(helper, chrono, KeySt
     onInputUpdate: function(callback, id) {
       return inputUpdateCallbacks.setGroup(id, callback);
     },
+    /*onInputEndUpdate: function(callback, id) {
+      return inputEndUpdateCallbacks.setGroup(id, callback);
+    },*/
     cancelOnInputUpdate: function(id) {
       inputUpdateCallbacks.clear(id);
       return this;

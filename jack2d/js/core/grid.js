@@ -7,7 +7,7 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
 
   return obj.mixin(chronoObject, {
     __mixin: true,
-    setDimensions: function(cellSize, gridWidth, gridHeight) {
+    setGrid: function(cellSize, gridWidth, gridHeight) {
       this.cellSize = cellSize;
       this.gridWidth = gridWidth;
       this.gridHeight = gridHeight;
@@ -15,10 +15,15 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
       this.onFrame(this.updateObjects);
       return this;
     },
-    getObjects: function(xMin, yMin, xMax, yMax) {
+    getNearby: function(sourceGridObj) {
       var gridObjects = this.gridObjects,
+        sourceCells = sourceGridObj.cells,
+        xMin = sourceCells.xMin,
+        xMax = sourceCells.xMax,
+        yMin = sourceCells.yMin,
+        yMax = sourceCells.yMax,
         gridObjectCount = gridObjects.length,
-        gridObject,
+        targetCells,
         i;
 
       if(!this.objectsInRange) {
@@ -27,21 +32,23 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
       this.objectsInRange.length = 0;
 
       for(i = 0; i < gridObjectCount; i++) {
-        gridObject = gridObjects[i].cells;
-        if(xMin > gridObject.xMax ||
-          xMax < gridObject.xMin ||
-          yMin > gridObject.yMax ||
-          yMax < gridObject.yMin) {
-          // do nothing
-        } else {
-          this.objectsInRange.push(gridObject);
+        if(gridObjects[i] === sourceGridObj) {
+          continue;
         }
+        targetCells = gridObjects[i].cells;
+        if(xMin > targetCells.xMax ||
+          xMax < targetCells.xMin ||
+          yMin > targetCells.yMax ||
+          yMax < targetCells.yMin) {
+          continue;
+        }
+        this.objectsInRange.push(gridObjects[i]);
       }
       return this.objectsInRange;
     },
-    addObject: function(obj) {
-      var validObj = (helper.isObject(obj)) ?
-            obj : helper.error('Jack2d: grid: object required');
+    addObject: function(gridObj) {
+      var validObj = (helper.isObject(gridObj)) ?
+            gridObj : helper.error('Jack2d: grid: object required');
 
       validObj.cells = {};
       this.gridObjects.push(validObj);
@@ -55,17 +62,17 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
         this.updateObject(gridObjects[i]);
       }
     },
-    updateObject: function(obj) {
-      var xMin = this.pixelToCell(obj.x),
-        yMin = this.pixelToCell(obj.y),
-        xMax = xMin + this.pixelToCell(obj.width),
-        yMax = yMin + this.pixelToCell(obj.height);
+    updateObject: function(gridObj) {
+      var xMin = this.pixelToCell(gridObj.x),
+        yMin = this.pixelToCell(gridObj.y),
+        xMax = this.pixelToCell(gridObj.x + gridObj.width),
+        yMax = this.pixelToCell(gridObj.y + gridObj.height);
 
-      obj.cells.xMin = xMin;
-      obj.cells.yMin = yMin;
-      obj.cells.xMax = xMax;
-      obj.cells.yMax = yMax;
-      obj.cells.outOfBounds = (
+      gridObj.cells.xMin = xMin;
+      gridObj.cells.yMin = yMin;
+      gridObj.cells.xMax = xMax;
+      gridObj.cells.yMax = yMax;
+      gridObj.cells.outOfBounds = (
         xMin >= this.gridWidth ||
         yMin >= this.gridHeight ||
         xMax < 0 ||

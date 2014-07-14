@@ -10,7 +10,7 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
     setGrid: function(cellSize, gridWidth, gridHeight) {
       this.cellSize = cellSize;
       this.gridWidth = gridWidth;
-      this.gridHeight = gridHeight;
+      this.gridHeight = gridHeight || gridWidth;
       this.gridObjects = [];
       this.onFrame(this.updateObjects);
       return this;
@@ -52,6 +52,13 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
 
       validObj.cells = {};
       this.gridObjects.push(validObj);
+      return this;
+    },
+    addObjects: function() {
+      var i, objects = (helper.isArray(arguments[0])) ? arguments[0] : arguments;
+      for(i = 0; i < objects.length; i++) {
+        this.addObject(objects[i]);
+      }
       return this;
     },
     updateObjects: function() {

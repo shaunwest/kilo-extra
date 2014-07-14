@@ -79,13 +79,13 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
           if(receiver.hasOwnProperty(prop)) {
             if(allowWrap) {
               receiver[prop] = func.wrap(giver[prop], receiver[prop]);
-              console.log('Jack2d: Wrapped \'' + prop + '\'');
+              console.log('Jack2d: Mixin: wrapped \'' + prop + '\'');
             } else if(exceptionOnCollisions) {
               helper.error('Jack2d: Failed to merge mixin. Method \'' +
                 prop + '\' caused a name collision.');
             } else {
               receiver[prop] = giver[prop];
-              console.log('Jack2d: Merged \'' + prop + '\'');
+              console.log('Jack2d: Mixin: overwrote \'' + prop + '\'');
             }
           } else {
             receiver[prop] = giver[prop];

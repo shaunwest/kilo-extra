@@ -9,6 +9,10 @@ jack2d('chronoObject', ['helper', 'chrono'], function(helper, chrono) {
     onFrame: function(func) {
       this.chronoId = chrono.register(helper.call(this, func), this.chronoId);
       return this;
+    },
+    killFrame: function() {
+      chrono.unRegister(this.chronoId);
+      return this;
     }
   };
 });

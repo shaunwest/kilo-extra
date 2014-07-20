@@ -5,6 +5,11 @@
 jack2d('rect', [], function() {
   'use strict';
 
+  function containsPoint(x, y, rect) {
+    return !(x < rect.left || x > rect.right ||
+      y < rect.top || y > rect.bottom);
+  }
+
   function containsRect(inner, outer) {
     return !(inner.left < outer.left ||
       inner.right > outer.right ||
@@ -33,6 +38,23 @@ jack2d('rect', [], function() {
   }
 
   return {
+    setLeft: function(left) {
+      this.left = left;
+      return this;
+    },
+    setTop: function(top) {
+      this.top = top;
+      return this;
+    },
+    setRight: function(right) {
+      this.right = right;
+      return this;
+    },
+    setBottom: function(bottom) {
+      this.bottom = bottom;
+      return this;
+    },
+    containsPoint: containsPoint,
     containsRect: containsRect,
     containsRectX: containsRectX,
     containsRectY: containsRectY,

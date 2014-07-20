@@ -7,13 +7,6 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
 
   return {
     clone: function(object) {
-      /*var prop, newObject = {};
-      for(prop in object) {
-        if(object.hasOwnProperty(prop)) {
-          newObject[prop] = object[prop];
-        }
-      }
-      return newObject;*/
       return this.merge(object);
     },
     merge: function(source, destination) {

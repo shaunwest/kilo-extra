@@ -14,7 +14,7 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
     sequence,
     timeSinceInput,
     inputUpdateCallbacks,
-    //inputUpdateEndCallbacks,
+    inputUpdateEndCallbacks,
     sequenceCallbacks,
     mode,
     inputReleased,
@@ -31,7 +31,7 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
     sequence = [];
     timeSinceInput = 0;
     inputUpdateCallbacks = new KeyStore();
-    //inputUpdateEndCallbacks = new KeyStore();
+    inputUpdateEndCallbacks = new KeyStore();
     sequenceCallbacks = new KeyStore();
     mode = MODE_MOUSE;
     inputReleased = false;
@@ -124,19 +124,15 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
     }
 
     if(Object.keys(inputs).length) {
-      executeInputCallbacks(inputUpdateCallbacks, deltaTime);
+      executeInputCallbacks(inputUpdateCallbacks, inputs, deltaTime);
     } else if(Object.keys(inputsEnded).length) {
-      executeInputCallbacks(inputUpdateCallbacks, deltaTime);
+      executeInputCallbacks(inputUpdateEndCallbacks, inputsEnded, deltaTime);
       obj.clear(inputsEnded);
     }
-    /*if(inputReleased) {
-      executeInputCallbacks(inputUpdateEndCallbacks, deltaTime);
-      inputReleased = false;
-    }*/
     timeSinceInput += deltaTime;
   }
 
-  function executeInputCallbacks(callbacks, deltaTime) {
+  function executeInputCallbacks(callbacks, values, deltaTime) {
     var items = callbacks.getItems(),
       numItems = items.length,
       numCallbacks,
@@ -147,7 +143,7 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
       item = items[i];
       numCallbacks = item.length;
       for(j = 0; j < numCallbacks; j++) {
-        item[j](inputs, inputsEnded, deltaTime);
+        item[j](values, inputsEnded, deltaTime);
       }
     }
   }
@@ -176,9 +172,9 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
     onInputUpdate: function(callback, id) {
       return inputUpdateCallbacks.setGroup(id, callback);
     },
-    /*onInputEndUpdate: function(callback, id) {
-      return inputEndUpdateCallbacks.setGroup(id, callback);
-    },*/
+    onInputUpdateEnd: function(callback, id) {
+      return inputUpdateEndCallbacks.setGroup(id, callback);
+    },
     cancelOnInputUpdate: function(id) {
       inputUpdateCallbacks.clear(id);
       return this;

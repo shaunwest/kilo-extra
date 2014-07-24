@@ -15,6 +15,7 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
       this.onFrame(this.updateObjects);
       return this;
     },
+    // TODO: result should be cached each frame
     getNearby: function(sourceGridObj) {
       var gridObjects = this.gridObjects,
         sourceCells = sourceGridObj.cells,

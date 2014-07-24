@@ -7,7 +7,7 @@ jack2d('actionObject', ['input', 'helper'], function(input, helper) {
 
   function createFunction(context, id, triggers, keyActions) {
     return function(callback) {
-      keyActions.push({id: id, key: triggers.key, element: triggers.element, callback: callback});
+      keyActions.push({id: id, key: triggers.key, element: triggers.element, callback: helper.call(context, callback)});
       return context;
     };
   }
@@ -17,16 +17,17 @@ jack2d('actionObject', ['input', 'helper'], function(input, helper) {
       var keyActions = (this.keyActions) ? this.keyActions : this.keyActions = [],
         id;
 
-      this.actions = {};
+      //this.actions = {};
       for(id in actions) {
         if(actions.hasOwnProperty(id)) {
-          this.actions[id] = createFunction(this.actions, id, actions[id], this.keyActions);
+          //this.actions[id] = createFunction(this.actions, id, actions[id], this.keyActions);
+          this['_' + id] = createFunction(this, id, actions[id], this.keyActions);
         }
       }
 
       this.inputId = input.onInputUpdate(helper.call(this, onInputUpdate), this.inputId);
 
-      function onInputUpdate(inputs, ended) {
+      function onInputUpdate(inputs) {
         var numKeyActions = keyActions.length,
           keyAction,
           i;

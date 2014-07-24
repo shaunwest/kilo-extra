@@ -63,6 +63,10 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     return obj;
   }
 
+  function getRegistered(id) {
+    return registeredCallbacks.get(id);
+  }
+
   function requestNextFrame() {
     frameTimerId = window.requestAnimationFrame(onFrame);
   }
@@ -156,6 +160,7 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     stop: stop,
     register: register,
     unRegister: unRegister,
+    getRegistered: getRegistered,
     registeredCount: registeredCount,
     getFps: getFps,
     getSeconds: getSeconds,

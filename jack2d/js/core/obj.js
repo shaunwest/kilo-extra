@@ -39,10 +39,11 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
         }
       }
     },
+    extend: function(parent, child) {
+      return this.mixin(parent, child, true);
+    },
     mixin: function(giver, reciever, allowWrap, exceptionOnCollisions) {
       reciever = reciever || {};
-      allowWrap = helper.def(allowWrap, true);
-
       if(helper.isArray(giver)) {
         giver.forEach(function(obj) {
           if(helper.isString(obj)) {

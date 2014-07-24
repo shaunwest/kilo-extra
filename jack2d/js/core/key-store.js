@@ -25,6 +25,7 @@ jack2d('KeyStore', ['HashArray', 'helper'], function(HashArray, helper) {
       val = valOrId;
     }
     this.store.add(id, val);
+    return id;
   };
 
   KeyStore.prototype.setGroup = function(valOrId, val) {

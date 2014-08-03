@@ -6,7 +6,6 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
   'use strict';
 
   return obj.mixin(chronoObject, {
-    __mixin: true,
     setGrid: function(cellSize, gridWidth, gridHeight) {
       this.cellSize = cellSize;
       this.gridWidth = gridWidth;

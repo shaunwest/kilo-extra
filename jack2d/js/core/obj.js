@@ -19,7 +19,7 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
       }
       if(receiver.hasOwnProperty(prop)) {
         if(allowWrap) {
-          receiver[prop] = func.wrap(giver[prop], receiver[prop]);
+          receiver[prop] = func.wrap(receiver[prop], giver[prop]);
           console.log('Jack2d: Mixin: wrapped \'' + prop + '\'');
         } else if(exceptionOnCollisions) {
           helper.error('Jack2d: Failed to merge mixin. Method \'' +
@@ -69,27 +69,26 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
       }
       return obj;
     },
-    extend: function(parent, child) {
-      return this.mixin(parent, child, true);
+    extend: function(parent) {
+      return this.mixin(parent, true);
     },
-    mixin: function(giver, reciever, allowWrap, exceptionOnCollisions) {
-      reciever = reciever || {};
+    mixin: function(giver, allowWrap, exceptionOnCollisions) {
+      var receiver = {};
       if(helper.isArray(giver)) {
         giver.forEach(function(obj) {
           if(helper.isString(obj)) {
             obj = injector.getDependency(obj);
           }
-          mergeObjects(obj, reciever, allowWrap, exceptionOnCollisions);
+          mergeObjects(obj, receiver, allowWrap, exceptionOnCollisions);
         });
       } else {
         if(helper.isString(giver)) {
           giver = injector.getDependency(giver);
         }
-        mergeObjects(giver, reciever, allowWrap, exceptionOnCollisions);
+        mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions);
       }
 
-
-      return reciever;
+      return receiver;
     }
   };
 });

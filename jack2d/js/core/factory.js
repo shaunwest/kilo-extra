@@ -2,24 +2,11 @@
  * Created by Shaun on 8/3/14.
  */
 
-jack2d('factory', ['helper', 'obj'], function(helper, obj) {
+jack2d('Factory', ['helper', 'obj', 'Pool'], function(helper, obj, Pool) {
   'use strict';
 
-  return function(factoryObject, functionOrArray) {
-    return function() {
-      if(helper.isFunction(functionOrArray)) {
-        if(factoryObject.hasOwnProperty(functionOrArray)) {
-          factoryObject[functionOrArray]();
-        }
-      } else if(helper.isArray(functionOrArray)) {
-        functionOrArray.forEach(function(functionName) {
-          if(factoryObject.hasOwnProperty(functionName)) {
-            factoryObject[functionName]();
-          }
-        });
-      }
-
-      return obj.create(factoryObject);
-    };
+  return function(TypeObject) {
+    var config = Pool.getObject();
+    return obj.mixin([TypeObject, config]);
   };
 });

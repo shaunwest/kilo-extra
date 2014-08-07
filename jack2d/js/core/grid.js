@@ -5,7 +5,7 @@
 jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoObject) {
   'use strict';
 
-  return obj.mixin(chronoObject, {
+  return obj.mixin([chronoObject, {
     setGrid: function(cellSize, gridWidth, gridHeight) {
       this.cellSize = cellSize;
       this.gridWidth = gridWidth;
@@ -89,5 +89,5 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
     pixelToCell: function(pixel) {
       return Math.floor(pixel / this.cellSize);
     }
-  });
+  }]);
 });

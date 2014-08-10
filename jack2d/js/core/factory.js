@@ -7,6 +7,6 @@ jack2d('Factory', ['helper', 'obj', 'Pool'], function(helper, obj, Pool) {
 
   return function(TypeObject) {
     var config = Pool.getObject();
-    return obj.mixin([TypeObject, config]);
+    return obj.mixin([TypeObject, config]); // Why config?
   };
 });

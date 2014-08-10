@@ -22,9 +22,11 @@ jack2d('HashArray', [], function() {
   HashArray.prototype.add = function(id, value) {
     if(this.idMap[id]) {
       this.items[this.idMap[id]] = value;
+      return true;
     } else {
       this.items.push(value);
       this.idMap[id] = this.items.length - 1;
+      return false;
     }
   };
 

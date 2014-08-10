@@ -15,6 +15,7 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     elapsedSeconds,
     registeredCallbacks,
     lastRegisteredId,
+    lastUid,
     oneSecondTimerId,
     frameTimerId,
     lastUpdateTime,
@@ -34,26 +35,23 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     ticks = 0;
     elapsedSeconds = 0;
     lastRegisteredId = 0;
+    lastUid = 0;
     registeredCallbacks = new HashArray();
     running = false;
     lastUpdateTime = new Date();
     return obj;
   }
 
+  function getUid() {
+    return ++lastUid;
+  }
+
   function register(callback, id) {
-    var callbacks;
     if(!id) {
       id = lastRegisteredId++;
-      callbacks = [];
-      registeredCallbacks.add(id, callbacks);
-    } else {
-      callbacks = registeredCallbacks.get(id);
     }
-    if(callbacks) {
-      callbacks.push(callback);
-    } else {
-      console.error('Jack2d: chrono id \''+ id + '\' not found.');
-    }
+
+    registeredCallbacks.add(id, callback);
 
     return id;
   }
@@ -101,17 +99,14 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
   }
 
   function executeFrameCallbacks(deltaTime) {
-    var items = registeredCallbacks.items,
-      numItems = items.length,
-      numCallbacks,
-      item,
-      i, j;
+    var items, numItems, item, i;
+
+    items = registeredCallbacks.items;
+    numItems = items.length;
+
     for(i = 0; i < numItems; i++) {
       item = items[i];
-      numCallbacks = item.length;
-      for(j = 0; j < numCallbacks; j++) {
-        item[j](deltaTime);
-      }
+      item(deltaTime);
     }
   }
 
@@ -162,6 +157,7 @@ jack2d('chrono', ['HashArray'], function(HashArray) {
     unRegister: unRegister,
     getRegistered: getRegistered,
     registeredCount: registeredCount,
+    getUid: getUid,
     getFps: getFps,
     getSeconds: getSeconds,
     getWholeMultiplier: getWholeMultiplier,

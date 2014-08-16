@@ -13,7 +13,6 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
     inputsEnded,
     sequence,
     timeSinceInput,
-    sequenceCallbacks,
     mode,
     lastDeltaTime,
     inputReleased,
@@ -29,7 +28,6 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
     inputsEnded = {};
     sequence = [];
     timeSinceInput = 0;
-    sequenceCallbacks = new KeyStore();
     mode = MODE_MOUSE;
     lastDeltaTime = 0;
     inputReleased = false;
@@ -119,27 +117,9 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
 
     if(timeSinceInput > MAX_SEQUENCE_TIME) {
       flushSequence();
-    } else if(sequence.length) {
-      executeSequenceCallbacks(deltaTime);
     }
 
     timeSinceInput += deltaTime;
-  }
-
-  function executeSequenceCallbacks(deltaTime) {
-    var items = sequenceCallbacks.getItems(),
-      numItems = items.length,
-      numCallbacks,
-      item,
-      i, j;
-
-    for(i = 0; i < numItems; i++) {
-      item = items[i];
-      numCallbacks = item.length;
-      for(j = 0; j < numCallbacks; j++) {
-        item[j](sequence, deltaTime);
-      }
-    }
   }
 
   function flushSequence() {
@@ -151,13 +131,6 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
   }
 
   return {
-    onKeySequence: function(callback, id) {
-      return sequenceCallbacks.setGroup(id, callback);
-    },
-    cancelOnKeySequence: function(id) {
-      sequenceCallbacks.clear(id);
-      return this;
-    },
     getInputs: function() {
       return inputs;
     },
@@ -180,8 +153,11 @@ jack2d('input', ['helper', 'obj', 'chrono', 'KeyStore'], function(helper, obj, c
       init();
       return this;
     },
+    setMode: function(value) {
+      setMode(value);
+      return this;
+    },
     isInput: isInput,
-    setMode: setMode,
     LEFT: 37,
     UP: 38,
     RIGHT: 39,

@@ -5,36 +5,62 @@
 jack2d('ActionObject', ['obj', 'input', 'helper'], function(Obj, Input, Helper) {
   'use strict';
 
-  function initActions(keyActions, updateFunc) {
-    updateFunc(onInputUpdate);
+  function onInputUpdate(context, keyActions) {
+    var numKeyActions,
+      inputs,
+      keyAction,
+      keys = false,
+      i;
 
-    function onInputUpdate() {
-      var numKeyActions = keyActions.length,
-        inputs = Input.getInputs(),
-        keyAction,
-        i;
+    numKeyActions = keyActions.length;
+    inputs = Input.getInputs();
 
-      for(i = 0; i < numKeyActions; i++) {
-        keyAction = keyActions[i];
-        if(keyAction.key && inputs[keyAction.key]) {
-          keyAction.callback(inputs[keyAction.key]);
-        } else if(inputs.interact && inputs.interact.target === keyAction.element) {
-          keyAction.callback(inputs.interact);
+    for(i = 0; i < numKeyActions; i++) {
+      keyAction = keyActions[i];
+      if(keyAction.key) {
+        if(inputs[keyAction.key]) {
+          if(keyAction.callback) {
+           keyAction.callback(inputs[keyAction.key]);
+          }
+          context[keyAction.id] = true;
+          keys = true;
+        } else {
+          context[keyAction.id] = false;
         }
+      } else if(keyAction.callback) {
+        keyAction.callback(inputs);
+      }
+
+      if(inputs.interact &&
+        inputs.interact.target === keyAction.element &&
+        keyAction.callback) {
+        keyAction.callback(inputs.interact);
       }
     }
+
+    context.idle = !keys;
   }
 
   return Obj.mixin(['chronoObject', {
-    action: function(actionId, actionConfig, callback) {
+    action: function(actionId, actionConfigOrCallback, callback) {
       if(!this.keyActions) {
-        initActions(this.keyActions = [], Helper.call(this, this.onFrame)); // bind?
+        this.keyActions = [];
+        this.onFrame(function() {
+          this.inputs = Input.getInputs();
+          this.inputsEnded = Input.getInputsEnded();
+          this.inputSequence = Input.getSequence();
+          onInputUpdate(this, this.keyActions);
+        });
+      }
+      if(Helper.isFunction(actionConfigOrCallback)) {
+        callback = actionConfigOrCallback;
+        actionConfigOrCallback = {};
       }
       this.keyActions.push({
         id: actionId,
-        key: actionConfig.key,
-        element: actionConfig.element,
-        callback: Helper.call(this, callback)
+        key: actionConfigOrCallback.key,
+        element: actionConfigOrCallback.element,
+        callback: (callback) ? callback.bind(this) : null
       });
       return this;
     }

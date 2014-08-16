@@ -11,7 +11,11 @@ jack2d('InputObject', ['obj', 'input'], function(Obj, Input) {
 
       this.onFrame(function() {
         if(Input.isInput()) {
-          contextOnInput(Input.getInputs(), Input.getInputsEnded());
+          contextOnInput(
+            this.inputs = Input.getInputs(),
+            this.inputsEnded = Input.getInputsEnded(),
+            this.inputSequence = Input.getSequence()
+          );
         }
       });
       return this;

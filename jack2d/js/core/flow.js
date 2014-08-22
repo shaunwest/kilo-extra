@@ -26,7 +26,15 @@ jack2d('Flow', ['helper', 'obj'], function(Helper, Obj) {
     return this.items.length;
   };
 
-  function assertAnd(ands, target) {
+  function evaluateItem(item, target) {
+    if((item.isFunc && item.value(target[item.prop])) ||
+      target[item.prop] === item.value) {
+      return !(item.ands && !evaluateAnd(item.ands, target));
+    }
+    return false;
+  }
+
+  function evaluateAnd(ands, target) {
     var numAnds, and, i;
     numAnds = ands.length;
     for(i = 0; i < numAnds; i++) {
@@ -39,33 +47,22 @@ jack2d('Flow', ['helper', 'obj'], function(Helper, Obj) {
     return true;
   }
 
-  function assertItem(item, target) {
-    if((item.isFunc && item.value(target[item.prop])) ||
-      target[item.prop] === item.value) {
-      return !(item.ands && !assertAnd(item.ands, target));
-    }
-    return false;
-  }
-
-  function setValues(item, target) {
-    var sets, setItem, numValues, i;
-    sets = item.sets;
-    numValues = sets.length;
+  function resolveItem(item, target) {
+    var ops, op, numValues, i;
+    ops = item.ops;
+    numValues = ops.length;
 
     for(i = 0; i < numValues; i++) {
-      setItem = sets[i];
-      target[setItem.prop] = setItem.value;
-    }
-  }
-
-  function runCalls(item, target) {
-    var calls, callItem, numCalls, i;
-    calls = item.calls;
-    numCalls = calls.length;
-
-    for(i = 0; i < numCalls; i++) {
-      callItem = calls[i];
-      target[callItem.func].apply(target, callItem.args);
+      op = ops[i];
+      if(op.func) {
+        if(op.isCallback) {
+          op.func.call(target);
+        } else {
+          target[op.func].apply(target, op.args);
+        }
+      } else {
+        target[op.prop] = op.value;
+      }
     }
   }
 
@@ -75,31 +72,36 @@ jack2d('Flow', ['helper', 'obj'], function(Helper, Obj) {
 
     for(i = 0; i < numItems; i++) {
       item = flowList.items[i];
-      if(assertItem(item, target)) {
-        if(item.sets) {
-          setValues(item, target);
-        }
-        if(item.calls) {
-          runCalls(item, target);
+      if(evaluateItem(item, target)) {
+        if(item.ops) {
+          resolveItem(item, target);
         }
       }
     }
   }
 
   return Obj.mixin(['chronoObject', {
+    setContext: function(context) {
+      this.context = context;
+      return this;
+    },
     when: function(prop, value) {
       if(!Helper.isDefined(value)) {
         value = true;
       }
       if(!this.flowList) {
-        this.flowList = new FlowList();
-        this.onFrame(function() {
-          update(this, this.flowList);
+        var flowList = this.flowList = new FlowList();
+        this.context.onFrame(function() {
+          update(this, flowList);
         });
       } else {
         this.flowList.next();
       }
-      this.flowList.set({prop: prop, value: value, isFunc: Helper.isFunction(value)});
+      this.flowList.set({
+        prop: prop,
+        value: value,
+        isFunc: Helper.isFunction(value)
+      });
       return this;
     },
     whenNot: function(prop) {
@@ -113,30 +115,43 @@ jack2d('Flow', ['helper', 'obj'], function(Helper, Obj) {
       if(!ands) {
         this.flowList.get().ands = ands = [];
       }
-      ands.push({prop: prop, value: value, isFunc: Helper.isFunction(value)});
+      ands.push({
+        prop: prop,
+        value: value,
+        isFunc: Helper.isFunction(value)
+      });
       return this;
     },
     andNot: function(prop) {
       return this.and(prop, false);
     },
     set: function(prop, value) {
-      var sets = this.flowList.get().sets;
-      if(!sets) {
-        this.flowList.get().sets = sets = [];
+      var ops = this.flowList.get().ops;
+      if(!ops) {
+        this.flowList.get().ops = ops = [];
       }
-      sets.push({prop: prop, value: value});
+      ops.push({prop: prop, value: value});
       return this;
     },
-    // FIXME: call and set should be combined in the flow list so they can
-    // all execute in the order that they're defined.
     call: function(func) {
       var args = Array.prototype.slice.call(arguments, 1),
-        calls = this.flowList.get().calls;
-      if(!calls) {
-        this.flowList.get().calls = calls = [];
+        ops = this.flowList.get().ops;
+      if(!ops) {
+        this.flowList.get().ops = ops = [];
       }
-      calls.push({func: func, args: args});
+      ops.push({func: func, args: args});
       return this;
+    },
+    run: function(func) {
+      var ops = this.flowList.get().ops;
+      if(!ops) {
+        this.flowList.get().ops = ops = [];
+      }
+      ops.push({func: func, isCallback: true});
+      return this;
+    },
+    done: function() {
+      return this.context || this;
     }
   }]);
 });

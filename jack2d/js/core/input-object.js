@@ -17,7 +17,7 @@ jack2d('InputObject', ['obj', 'input'], function(Obj, Input) {
             this.inputSequence = Input.getSequence()
           );
         }
-      });
+      }, 'input-object');
       return this;
     }
   }]);

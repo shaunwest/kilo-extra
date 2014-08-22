@@ -2,11 +2,12 @@
  * Created by Shaun on 8/3/14.
  */
 
-jack2d('Factory', ['helper', 'obj', 'Pool'], function(helper, obj, Pool) {
+jack2d('Factory', ['obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {
-    var config = Pool.getObject();
-    return obj.mixin([TypeObject, config]); // Why config?
+    //var newObject = Pool.getObject();
+    //return Obj.mixin([TypeObject, newObject]); // FIXME: mixin still auto-creates an empty object
+    return Obj.mixin([TypeObject]);
   };
 });

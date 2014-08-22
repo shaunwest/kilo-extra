@@ -27,8 +27,6 @@ jack2d('chronoObject', ['helper', 'chrono', 'HashArray'], function(helper, chron
 
       return this;
     },
-    /*when: function() {
-    },*/
     killOnFrame: function(id) {
       if(id) {
         this.chronoFunctions.remove(id);

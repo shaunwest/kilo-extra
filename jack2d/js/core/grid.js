@@ -11,7 +11,7 @@ jack2d('grid', ['helper', 'obj', 'chronoObject'], function(helper, obj, chronoOb
       this.gridWidth = gridWidth;
       this.gridHeight = gridHeight || gridWidth;
       this.gridObjects = [];
-      this.onFrame(this.updateObjects);
+      this.onFrame(this.updateObjects, 'grid');
       return this;
     },
     // TODO: result should be cached each frame

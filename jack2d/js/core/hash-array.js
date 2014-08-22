@@ -49,6 +49,24 @@ jack2d('HashArray', [], function() {
     }
   };
 
+  HashArray.prototype.getIdByIndex = function(index) {
+    var idMap = this.idMap, id;
+    for(id in idMap) {
+      if(idMap[id] === index) {
+        return id;
+      }
+    }
+    return '';
+  };
+
+  HashArray.prototype.list = function() {
+    var i, numItems = this.size(), result = [];
+    for(i = 0; i < numItems; i++) {
+      result.push(this.getIdByIndex(i));
+    }
+    return result;
+  };
+
   HashArray.prototype.size = function() {
     return this.items.length;
   };

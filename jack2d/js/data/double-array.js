@@ -1,5 +1,7 @@
 /**
  * Created by Shaun on 7/26/14.
+ *
+ * Probably going to deprecate this
  */
 
 jack2d('DoubleArray', [], function() {

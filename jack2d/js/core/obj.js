@@ -34,7 +34,35 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
     });
   }
 
+  function augmentMethods(targetObject, augmenter) {
+    var newObject = {}; // TODO: use pooling?
+
+    Object.keys(targetObject).forEach(function(prop) {
+      if(!helper.isFunction(targetObject[prop])) {
+        return;
+      }
+      newObject[prop] = augmentMethod(targetObject[prop], targetObject, augmenter);
+    });
+
+    return newObject;
+  }
+
+  function augmentMethod(method, context, augmenter) {
+    return function() {
+      var args = helper.argsToArray(arguments);
+      if(augmenter) {
+        args.unshift(method);
+        return augmenter.apply(context, args);
+      } else {
+        return method.apply(context, args);
+      }
+    };
+  }
+
   return {
+    augment: function(object, augmenter) {
+      return augmentMethods(object, augmenter);
+    },
     clone: function(object) {
       return this.merge(object);
     },

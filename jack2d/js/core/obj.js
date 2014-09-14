@@ -2,7 +2,7 @@
  * Created by Shaun on 6/28/14.
  */
 
-jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
+jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper, func, Pool) {
   'use strict';
 
   function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {
@@ -101,7 +101,7 @@ jack2d('obj', ['injector', 'helper', 'func'], function(injector, helper, func) {
       return this.mixin(parent, true);
     },
     mixin: function(giver, allowWrap, exceptionOnCollisions) {
-      var receiver = {};
+      var receiver = Pool.getObject();
       if(helper.isArray(giver)) {
         giver.forEach(function(obj) {
           if(helper.isString(obj)) {

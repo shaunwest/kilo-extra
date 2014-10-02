@@ -5,51 +5,66 @@
 jack2d('Viewport', ['helper'], function(helper) {
   'use strict';
 
-  function init(targetObject) {
-    if(targetObject.layers) {
-      return;
-    }
-    targetObject.contentWidth = 128;
-    targetObject.contentHeight = 128;
-    targetObject.position = {x: 0, y: 0};
-    targetObject.layers = [];
+  function initViewDimensions() {
+    return {
+      x: 0,
+      y: 0,
+      width: 128,
+      height: 128
+    };
   }
 
   return {
-    /*viewport: function() {
-      this.contentWidth = 128;
-      this.contentHeight = 128;
-      this.position = {x: 0, y: 0};
-      this.layers = [];
-      return this;
-    },*/
     addLayer: function(layer) {
-      init(this);
-      this.contentWidth = Math.max(layer.getPixelWidth(), this.contentWidth);
-      this.contentHeight = Math.max(layer.getPixelHeight(), this.contentHeight);
-      //this.setCanvasSize();
+      if(!this.layers) {
+        this.viewDimensions = initViewDimensions();
+        this.layers = [];
+      }
+      //this.setViewportWidth(Math.max(layer.getLayerWidth(), this.viewDimensions.width));
+      //this.setViewportHeight(Math.max(layer.getLayerHeight(), this.viewDimensions.height));
       this.layers.push({visible: true, layer: layer});
       return this;
     },
+    setViewportWidth: function(value) {
+      if(!this.viewDimensions) {
+        this.viewDimensions = initViewDimensions();
+      }
+      this.viewDimensions.width = value;
+      return this;
+    },
+    setViewportHeight: function(value) {
+      if(!this.viewDimensions) {
+        this.viewDimensions = initViewDimensions();
+      }
+      this.viewDimensions.height = value;
+      return this;
+    },
     getLayer: function(layerIndex) {
-      return this.layers[layerIndex];
+      if(this.layers){
+        return this.layers[layerIndex];
+      }
+      return null;
     },
     hideLayer: function(layerIndex) {
-      this.layers[layerIndex].visible = false;
+      if(this.layers && this.layers[layerIndex]) {
+        this.layers[layerIndex].visible = false;
+      }
       return this;
     },
     showLayer: function(layerIndex) {
-      this.layers[layerIndex].visible = true;
+      if(this.layers && this.layers[layerIndex]) {
+        this.layers[layerIndex].visible = true;
+      }
       return this;
     },
-    getPosition: function() {
-      return this.position;
+    getViewDimensions: function() {
+      return this.viewDimensions;
     },
     setPosition: function(x, y) {
-      this.position.x = x;
-      this.position.y = y;
-      //this.canvas.style.left = -x + 'px';
-      //this.canvas.style.top = -y + 'px';
+      var viewDimensions = (this.viewDimensions) ?
+        this.viewDimensions : this.viewDimensions = initViewDimensions();
+      viewDimensions.x = x;
+      viewDimensions.y = y;
       return this;
     }
   };

@@ -8,6 +8,7 @@ jack2d('Factory', ['obj', 'Pool'], function(Obj, Pool) {
   return function(TypeObject) {
     //var newObject = Pool.getObject();
     //return Obj.mixin([TypeObject, newObject]); // FIXME: mixin still auto-creates an empty object
-    return Obj.mixin([TypeObject]);
+    var newObject = Obj.mixin([TypeObject]);
+    return newObject;
   };
 });

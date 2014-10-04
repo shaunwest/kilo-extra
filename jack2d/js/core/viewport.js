@@ -17,11 +17,12 @@ jack2d('Viewport', ['helper'], function(helper) {
   return {
     addLayer: function(layer) {
       if(!this.layers) {
-        this.viewDimensions = initViewDimensions();
         this.layers = [];
       }
-      //this.setViewportWidth(Math.max(layer.getLayerWidth(), this.viewDimensions.width));
-      //this.setViewportHeight(Math.max(layer.getLayerHeight(), this.viewDimensions.height));
+      if(!this.viewDimensions) {
+        this.viewDimensions = initViewDimensions();
+      }
+
       this.layers.push({visible: true, layer: layer});
       return this;
     },

@@ -7,7 +7,7 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
 
   function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {
     giver = giver || {};
-    if(giver.__mixin === false) {
+    if(giver.__mixin === false) { // This should be fatal. Also, what about receiver?
       console.log('Jack2d: Can\'t mixin object because the object has disallowed it.');
       return;
     }

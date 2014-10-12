@@ -19,6 +19,15 @@ jack2d('HashArray', [], function() {
     }
   }
 
+  function realign2(idMap, splicedIndex) {
+    var id;
+    for(id in idMap) {
+      if(idMap.hasOwnProperty(id) && idMap[id] >= splicedIndex) {
+        idMap[id]++;
+      }
+    }
+  }
+
   HashArray.prototype.add = function(id, value) {
     if(this.idMap[id]) {
       this.items[this.idMap[id]] = value;
@@ -28,6 +37,13 @@ jack2d('HashArray', [], function() {
       this.idMap[id] = this.items.length - 1;
       return false;
     }
+  };
+
+  HashArray.prototype.splice = function(targetId, id, value) {
+    var index = this.idMap[targetId] + 1;
+    this.items.splice(index, 0, value);
+    realign2(this.idMap, index);
+    this.idMap[id] = index;
   };
 
   HashArray.prototype.get = function(id) {

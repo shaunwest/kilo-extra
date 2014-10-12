@@ -2,10 +2,10 @@
  * Created by Shaun on 9/27/14.
  */
 
-jack2d('Requires', ['helper'], function(Helper) {
+jack2d('Requires', ['obj'], function(Obj) {
   'use strict';
 
-  function Requires(requiredProps, func) {
+  return function(requiredProps, func) {
     var requiresFunc = function() {
       var i, numValues, requiredProp, context = this;
       for(i = 0, numValues = requiredProps.length; i < numValues; i++) {
@@ -15,20 +15,18 @@ jack2d('Requires', ['helper'], function(Helper) {
             console.log('Jack2d: Requires: \'' + requiredProp + '\' is required.');
             func._reported = true;
           }
-          return context;
+          return context; // TODO: is this the appropriate values to return?
         }
       }
 
-      Object.keys(context).forEach(function(prop) {
-        if(context[prop] === requiresFunc) {
-          console.log('Jack2d: Requires: \'' + requiredProp + '\' requirement fulfilled.');
-          context[prop] = func;
-        }
-      });
+      Obj.replaceMethod(
+        context,
+        requiresFunc,
+        func,
+        'Jack2d: Requires: \'' + requiredProp + '\' requirement fulfilled.'
+      );
       return func.apply(context, arguments);
     };
     return requiresFunc;
-  }
-
-  return Requires;
+  };
 });

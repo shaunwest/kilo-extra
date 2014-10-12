@@ -60,6 +60,14 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
   }
 
   return {
+    replaceMethod: function(context, oldMethod, newMethod, message) {
+      Object.keys(context).forEach(function(prop) {
+        if(context[prop] === oldMethod) {
+          console.log(message);
+          context[prop] = newMethod;
+        }
+      });
+    },
     augment: function(object, augmenter) {
       return augmentMethods(object, augmenter);
     },

@@ -61,6 +61,15 @@ jack2d('Viewport', ['helper'], function(helper) {
     getViewDimensions: function() {
       return this.viewDimensions;
     },
+    // TODO: Needs a "RequireInit" or something
+    setPositionX: function(x) {
+      this.setPosition(x, this.viewDimensions.y);
+      return this;
+    },
+    setPositionY: function(y) {
+      this.setPosition(this.viewDimensions.x, y);
+      return this;
+    },
     setPosition: function(x, y) {
       var viewDimensions = (this.viewDimensions) ?
         this.viewDimensions : this.viewDimensions = initViewDimensions();

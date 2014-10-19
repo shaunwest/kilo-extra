@@ -17,14 +17,24 @@ jack2d('rect', [], function() {
       inner.bottom > outer.bottom);
   }
 
+  // WTF?
   function containsRectX(inner, outer) {
     var contains = !(inner.left < outer.left || inner.right > outer.right);
     return (contains) ? false : inner.left - outer.left;
   }
 
+  function containsX(x, outer) {
+    return !(x < outer.left || x > outer.right);
+  }
+
+  // WTF?
   function containsRectY(inner, outer) {
     var contains = !(inner.top < outer.top || inner.bottom > outer.bottom);
     return (contains) ? false : inner.top - outer.top;
+  }
+
+  function containsY(y, outer) {
+    return !(y < outer.top || y > outer.bottom);
   }
 
   function intersectsRectX(r1, r2) {
@@ -56,6 +66,8 @@ jack2d('rect', [], function() {
     },
     containsPoint: containsPoint,
     containsRect: containsRect,
+    containsX: containsX,
+    containsY: containsY,
     containsRectX: containsRectX,
     containsRectY: containsRectY,
     intersectsRectX: intersectsRectX,

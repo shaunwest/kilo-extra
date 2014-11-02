@@ -12,11 +12,11 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
       return;
     }
     Object.keys(giver).forEach(function(prop) {
-      if(!helper.isFunction(giver[prop])) {
+      /*if(!helper.isFunction(giver[prop])) {
         // we don't want to merge state, so
         // only allow functions.
         return;
-      }
+      }*/
       if(receiver.hasOwnProperty(prop)) {
         if(allowWrap) {
           receiver[prop] = func.wrap(receiver[prop], giver[prop]);
@@ -108,6 +108,7 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
     extend: function(parent) {
       return this.mixin(parent, true);
     },
+    // TODO: make this work with functions
     mixin: function(giver, allowWrap, exceptionOnCollisions) {
       var receiver = Pool.getObject();
       if(helper.isArray(giver)) {

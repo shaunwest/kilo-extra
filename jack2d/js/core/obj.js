@@ -2,13 +2,13 @@
  * Created by Shaun on 6/28/14.
  */
 
-jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper, func, Pool) {
+jack2d('obj', ['Injector', 'Util', 'func', 'Pool'], function(Injector, Util, func, Pool) {
   'use strict';
 
   function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {
     giver = giver || {};
     if(giver.__mixin === false) { // This should be fatal. Also, what about receiver?
-      console.log('Jack2d: Can\'t mixin object because the object has disallowed it.');
+      Util.error('Can\'t mixin object because the object has disallowed it.');
       return;
     }
     Object.keys(giver).forEach(function(prop) {
@@ -20,13 +20,13 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
       if(receiver.hasOwnProperty(prop)) {
         if(allowWrap) {
           receiver[prop] = func.wrap(receiver[prop], giver[prop]);
-          console.log('Jack2d: Mixin: wrapped \'' + prop + '\'');
+          Util.log('Mixin: wrapped \'' + prop + '\'');
         } else if(exceptionOnCollisions) {
-          helper.error('Jack2d: Failed to merge mixin. Method \'' +
+          Util.error('Failed to merge mixin. Method \'' +
             prop + '\' caused a name collision.');
         } else {
           receiver[prop] = giver[prop];
-          console.log('Jack2d: Mixin: overwrote \'' + prop + '\'');
+          Util.log('Mixin: overwrote \'' + prop + '\'');
         }
       } else {
         receiver[prop] = giver[prop];
@@ -38,7 +38,7 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
     var newObject = {}; // TODO: use pooling?
 
     Object.keys(targetObject).forEach(function(prop) {
-      if(!helper.isFunction(targetObject[prop])) {
+      if(!Util.isFunction(targetObject[prop])) {
         return;
       }
       newObject[prop] = augmentMethod(targetObject[prop], targetObject, augmenter);
@@ -49,7 +49,7 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
 
   function augmentMethod(method, context, augmenter) {
     return function() {
-      var args = helper.argsToArray(arguments);
+      var args = Util.argsToArray(arguments);
       if(augmenter) {
         args.unshift(method);
         return augmenter.apply(context, args);
@@ -90,7 +90,7 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
     print: function(obj) {
       var prop, str = '';
       for(prop in obj) {
-        if(obj.hasOwnProperty(prop) && !helper.isFunction(obj[prop])) {
+        if(obj.hasOwnProperty(prop) && !Util.isFunction(obj[prop])) {
           str += prop + ': ' + obj[prop] + '<br>';
         }
       }
@@ -105,22 +105,26 @@ jack2d('obj', ['injector', 'helper', 'func', 'Pool'], function(injector, helper,
       }
       return obj;
     },
-    extend: function(parent) {
-      return this.mixin(parent, true);
+    extend: function() {
+      var args = (arguments.length > 1) ?
+        Util.argsToArray(arguments) :
+        arguments[0];
+      return this.mixin(args, true);
     },
     // TODO: make this work with functions
+    // TODO: should it always create a new object? Should be able to mix into existing object
     mixin: function(giver, allowWrap, exceptionOnCollisions) {
       var receiver = Pool.getObject();
-      if(helper.isArray(giver)) {
+      if(Util.isArray(giver)) {
         giver.forEach(function(obj) {
-          if(helper.isString(obj)) {
-            obj = injector.getDependency(obj);
+          if(Util.isString(obj)) {
+            obj = Injector.getDependency(obj);
           }
           mergeObjects(obj, receiver, allowWrap, exceptionOnCollisions);
         });
       } else {
-        if(helper.isString(giver)) {
-          giver = injector.getDependency(giver);
+        if(Util.isString(giver)) {
+          giver = Injector.getDependency(giver);
         }
         mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions);
       }

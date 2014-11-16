@@ -2,24 +2,19 @@
  * Created by Shaun on 6/28/14.
  */
 
-kilo('obj', ['Injector', 'Util', 'func', 'Pool'], function(Injector, Util, func, Pool) {
+kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
   'use strict';
 
   function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {
     giver = giver || {};
-    if(giver.__mixin === false) { // This should be fatal. Also, what about receiver?
+    if(giver.__mixin === false) { // What about receiver?
       Util.error('Can\'t mixin object because the object has disallowed it.');
       return;
     }
     Object.keys(giver).forEach(function(prop) {
-      /*if(!helper.isFunction(giver[prop])) {
-        // we don't want to merge state, so
-        // only allow functions.
-        return;
-      }*/
       if(receiver.hasOwnProperty(prop)) {
         if(allowWrap) {
-          receiver[prop] = func.wrap(receiver[prop], giver[prop]);
+          receiver[prop] = Func.wrap(receiver[prop], giver[prop]);
           Util.log('Mixin: wrapped \'' + prop + '\'');
         } else if(exceptionOnCollisions) {
           Util.error('Failed to merge mixin. Method \'' +

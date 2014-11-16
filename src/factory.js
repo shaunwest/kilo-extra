@@ -2,7 +2,7 @@
  * Created by Shaun on 8/3/14.
  */
 
-kilo('Factory', ['obj', 'Pool'], function(Obj, Pool) {
+kilo('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {

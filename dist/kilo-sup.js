@@ -211,7 +211,7 @@ kilo('Canvas', [], function() {
  * Created by Shaun on 11/2/2014.
  */
 
-kilo('Extend', ['obj'], function(Obj) {
+kilo('Extend', ['Obj'], function(Obj) {
   'use strict';
 
   return Obj.extend.bind(Obj);
@@ -220,7 +220,7 @@ kilo('Extend', ['obj'], function(Obj) {
  * Created by Shaun on 8/3/14.
  */
 
-kilo('Factory', ['obj', 'Pool'], function(Obj, Pool) {
+kilo('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {
@@ -234,7 +234,7 @@ kilo('Factory', ['obj', 'Pool'], function(Obj, Pool) {
  * Created by Shaun on 7/6/14.
  */
 
-kilo('func', [], function() {
+kilo('Func', [], function() {
   'use strict';
 
   function partial(f) {
@@ -427,7 +427,7 @@ kilo('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
  * Created by Shaun on 11/2/2014.
  */
 
-kilo('Mixin', ['obj'], function(Obj) {
+kilo('Mixin', ['Obj'], function(Obj) {
   'use strict';
 
   return Obj.mixin.bind(Obj);
@@ -437,24 +437,19 @@ kilo('Mixin', ['obj'], function(Obj) {
  * Created by Shaun on 6/28/14.
  */
 
-kilo('obj', ['Injector', 'Util', 'func', 'Pool'], function(Injector, Util, func, Pool) {
+kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
   'use strict';
 
   function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {
     giver = giver || {};
-    if(giver.__mixin === false) { // This should be fatal. Also, what about receiver?
+    if(giver.__mixin === false) { // What about receiver?
       Util.error('Can\'t mixin object because the object has disallowed it.');
       return;
     }
     Object.keys(giver).forEach(function(prop) {
-      /*if(!helper.isFunction(giver[prop])) {
-        // we don't want to merge state, so
-        // only allow functions.
-        return;
-      }*/
       if(receiver.hasOwnProperty(prop)) {
         if(allowWrap) {
-          receiver[prop] = func.wrap(receiver[prop], giver[prop]);
+          receiver[prop] = Func.wrap(receiver[prop], giver[prop]);
           Util.log('Mixin: wrapped \'' + prop + '\'');
         } else if(exceptionOnCollisions) {
           Util.error('Failed to merge mixin. Method \'' +

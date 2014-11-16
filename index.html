@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>Kilo Supplemental</title>
+  <script src="dist/kilo-sup.min.js"></script>
+  <script>
+    kilo(['Util', 'HashArray'], function(Util, HashArray) {
+      'use strict';
+
+      var hashArray = new HashArray();
+
+      hashArray.set('a', 1);
+      hashArray.set('b', 2);
+      hashArray.set('c', 3);
+      hashArray.set('d', 4);
+
+      kilo.element('keys', function() {
+        this.innerHTML = hashArray.getKeys();
+      });
+
+      kilo.element('values', function() {
+        this.innerHTML = hashArray.getValues();
+      });
+
+      kilo.element('value', function() {
+        this.innerHTML = hashArray.get('b');
+      });
+    });
+  </script>
+</head>
+<body>
+  <h1>Kilo Supplemental</h1>
+  <div>hashArray = [a: 1, b: 2, c: 3, d: 4]</div>
+  <div>Keys: <span data-keys></span></div>
+  <div>Values: <span data-values></span></div>
+  <div>Value 'b': <span data-value></span></div>
+</body>
+</html>

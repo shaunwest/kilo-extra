@@ -2,7 +2,7 @@
  * Created by Shaun on 6/28/14.
  */
 
-jack2d('obj', ['Injector', 'Util', 'func', 'Pool'], function(Injector, Util, func, Pool) {
+kilo('obj', ['Injector', 'Util', 'func', 'Pool'], function(Injector, Util, func, Pool) {
   'use strict';
 
   function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {

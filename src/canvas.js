@@ -2,7 +2,7 @@
  * Created by Shaun on 10/18/14.
  */
 
-jack2d('Canvas', [], function() {
+kilo('Canvas', [], function() {
   'use strict';
 
   return {

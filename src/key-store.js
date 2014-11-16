@@ -4,7 +4,7 @@
  * This is a decorator for HashArray. It adds automatic id management.
  */
 
-jack2d('KeyStore', ['HashArray', 'helper'], function(HashArray, helper) {
+kilo('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
   'use strict';
 
   function KeyStore() {
@@ -18,7 +18,7 @@ jack2d('KeyStore', ['HashArray', 'helper'], function(HashArray, helper) {
 
   KeyStore.prototype.set = function(valOrId, val) {
     var id;
-    if(helper.isDefined(val)) {
+    if(Util.isDefined(val)) {
       id = valOrId || this.lastId++;
     } else {
       id = this.lastId++;
@@ -30,9 +30,9 @@ jack2d('KeyStore', ['HashArray', 'helper'], function(HashArray, helper) {
 
   KeyStore.prototype.setGroup = function(valOrId, val) {
     var id, values;
-    if(helper.isDefined(val)) {
+    if(Util.isDefined(val)) {
       id = valOrId;
-      if(helper.isDefined(id)) {
+      if(Util.isDefined(id)) {
         values = this.get(id);
       } else {
         id = this.lastId++;
@@ -56,7 +56,7 @@ jack2d('KeyStore', ['HashArray', 'helper'], function(HashArray, helper) {
   };
 
   KeyStore.prototype.clear = function(id) {
-    if(helper.isDefined(id)) {
+    if(Util.isDefined(id)) {
       this.store.remove(id);
     } else {
       this.store.removeAll();

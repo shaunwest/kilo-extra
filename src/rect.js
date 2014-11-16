@@ -2,7 +2,7 @@
  * Created by Shaun on 7/16/14.
  */
 
-jack2d('rect', [], function() {
+kilo('rect', [], function() {
   'use strict';
 
   function containsPoint(x, y, rect) {

@@ -2,7 +2,7 @@
  * Created by Shaun on 7/6/14.
  */
 
-jack2d('func', [], function() {
+kilo('func', [], function() {
   'use strict';
 
   function partial(f) {

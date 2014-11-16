@@ -2,7 +2,7 @@
  * Created by Shaun on 8/3/14.
  */
 
-jack2d('Factory', ['obj', 'Pool'], function(Obj, Pool) {
+kilo('Factory', ['obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {

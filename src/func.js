@@ -20,8 +20,20 @@ kilo('Func', [], function() {
     return partial(wrapper, f);
   }
 
+  function fastPartial(f) {
+    return function() {
+      var boundArgs =  Array.prototype.slice.call(arguments);
+      var lastIndex = boundArgs.length;
+      return function(val) {
+        boundArgs[lastIndex] = val;
+        return f.apply(this, boundArgs);
+      };
+    };
+  }
+
   return {
     partial: partial,
+    fastPartial: fastPartial,
     wrap: wrap
   };
 });

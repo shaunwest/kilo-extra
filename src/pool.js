@@ -15,6 +15,7 @@ kilo('Pool', [], function() {
     return newObject;
   }
 
+  // FIXME: replace with Obj.clear()
   function clearObject(obj) {
     var prop;
     for(prop in obj) {

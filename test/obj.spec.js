@@ -40,7 +40,7 @@ describe('Kilo Supplemental - Obj Spec', function() {
           return 'world';
         }
       };
-      var newObject = Obj.mixin([BaseObject, SubObject]);
+      var newObject = Obj.merge([BaseObject, SubObject]);
 
       expect(newObject.foo).not.toBe(undefined);
       expect(newObject.baz).not.toBe(undefined);
@@ -55,7 +55,7 @@ describe('Kilo Supplemental - Obj Spec', function() {
           return foo.call(this).toUpperCase();
         }
       };
-      var newObject = Obj.extend([BaseObject, SubObject]);
+      var newObject = Obj.wrap([BaseObject, SubObject]);
 
       expect(newObject.foo).not.toBe(undefined);
       expect(newObject.baz).not.toBe(undefined);

@@ -208,15 +208,6 @@ kilo('Canvas', [], function() {
   };
 });
 /**
- * Created by Shaun on 11/2/2014.
- */
-
-kilo('Extend', ['Obj'], function(Obj) {
-  'use strict';
-
-  return Obj.extend.bind(Obj);
-});
-/**
  * Created by Shaun on 8/3/14.
  */
 
@@ -439,10 +430,10 @@ kilo('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
  * Created by Shaun on 11/2/2014.
  */
 
-kilo('Mixin', ['Obj'], function(Obj) {
+kilo('Merge', ['Obj'], function(Obj) {
   'use strict';
 
-  return Obj.mixin.bind(Obj);
+  return Obj.merge.bind(Obj);
 });
 
 /**
@@ -452,32 +443,38 @@ kilo('Mixin', ['Obj'], function(Obj) {
 kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
   'use strict';
 
-  function mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions) {
-    giver = giver || {};
-    if(giver.__mixin === false) { // What about receiver?
-      Util.error('Can\'t mixin object because the object has disallowed it.');
-      return;
-    }
-    Object.keys(giver).forEach(function(prop) {
-      if(receiver.hasOwnProperty(prop)) {
-        if(allowWrap) {
-          receiver[prop] = Func.wrap(receiver[prop], giver[prop]);
-          Util.log('Mixin: wrapped \'' + prop + '\'');
-        } else if(exceptionOnCollisions) {
-          Util.error('Failed to merge mixin. Method \'' +
-            prop + '\' caused a name collision.');
-        } else {
-          receiver[prop] = giver[prop];
-          Util.log('Mixin: overwrote \'' + prop + '\'');
-        }
-      } else {
-        receiver[prop] = giver[prop];
-      }
+  function mergeObject(source, destination, allowWrap, exceptionOnCollisions) {
+    source = source || Pool.getObject();
+    destination = destination || Pool.getObject();
+
+    Object.keys(source).forEach(function(prop) {
+      assignProperty(source, destination, prop, allowWrap, exceptionOnCollisions);
     });
+
+    return destination;
+  }
+
+  function assignProperty(source, destination, prop, allowWrap, exceptionOnCollisions) {
+    if(destination.hasOwnProperty(prop)) {
+      if(allowWrap) {
+        destination[prop] = Func.wrap(destination[prop], source[prop]);
+        Util.log('Merge: wrapped \'' + prop + '\'');
+      } else if(exceptionOnCollisions) {
+        Util.error('Failed to merge mixin. Method \'' +
+          prop + '\' caused a name collision.');
+      } else {
+        destination[prop] = source[prop];
+        Util.log('Merge: overwrote \'' + prop + '\'');
+      }
+    } else {
+      destination[prop] = source[prop];
+    }
+
+    return destination;
   }
 
   function augmentMethods(targetObject, augmenter) {
-    var newObject = {}; // TODO: use pooling?
+    var newObject = {}; // FIXME: use pooling?
 
     Object.keys(targetObject).forEach(function(prop) {
       if(!Util.isFunction(targetObject[prop])) {
@@ -501,78 +498,101 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
     };
   }
 
-  return {
-    replaceMethod: function(context, oldMethod, newMethod, message) {
-      Object.keys(context).forEach(function(prop) {
-        if(context[prop] === oldMethod) {
-          console.log(message);
-          context[prop] = newMethod;
+  function processDependencies(deps, onProcessed) {
+    if(Util.isArray(deps)) {
+      deps.forEach(function(obj) {
+        if(Util.isString(obj)) {
+          obj = Injector.getDependency(obj);
         }
+        onProcessed(obj);
       });
-    },
-    augment: function(object, augmenter) {
-      return augmentMethods(object, augmenter);
-    },
-    clone: function(object) {
-      return this.merge(object);
-    },
-    merge: function(source, destination) {
-      var prop;
-      destination = destination || {};
-      for(prop in source) {
-        if(source.hasOwnProperty(prop)) {
-          destination[prop] = source[prop];
-        }
+    } else {
+      if(Util.isString(deps)) {
+        deps = Injector.getDependency(deps);
       }
-      return destination;
-    },
-    create: function(source) {
-      return this.mixin(source);
-    },
-    print: function(obj) {
-      var prop, str = '';
+      onProcessed(deps);
+    }
+  }
+
+  function replaceMethod(context, oldMethod, newMethod, message) {
+    Object.keys(context).forEach(function(prop) {
+      if(context[prop] === oldMethod) {
+        context[prop] = newMethod;
+      }
+    });
+  }
+
+  function augment(obj, augmenter) {
+    return augmentMethods(obj, augmenter);
+  }
+
+  function quickClone(obj) {
+    return quickMerge(obj);
+  }
+
+  function quickMerge(source, destination) {
+    var prop;
+    destination = destination || Pool.getObject();
+    for(prop in source) {
+      if(source.hasOwnProperty(prop)) {
+        destination[prop] = source[prop];
+      }
+    }
+    return destination;
+  }
+
+  function print(obj) {
+    var prop, str = '';
+    if(Util.isObject(obj)) {
       for(prop in obj) {
         if(obj.hasOwnProperty(prop) && !Util.isFunction(obj[prop])) {
           str += prop + ': ' + obj[prop] + '<br>';
         }
       }
-      return str;
-    },
-    clear: function(obj) {
-      var prop;
-      for(prop in obj) {
-        if(obj.hasOwnProperty(prop)) {
-          delete obj[prop];
-        }
-      }
-      return obj;
-    },
-    extend: function() {
-      var args = (arguments.length > 1) ?
-        Util.argsToArray(arguments) :
-        arguments[0];
-      return this.mixin(args, true);
-    },
-    // TODO: make this work with functions
-    // TODO: should it always create a new object? Should be able to mix into existing object
-    mixin: function(giver, allowWrap, exceptionOnCollisions) {
-      var receiver = Pool.getObject();
-      if(Util.isArray(giver)) {
-        giver.forEach(function(obj) {
-          if(Util.isString(obj)) {
-            obj = Injector.getDependency(obj);
-          }
-          mergeObjects(obj, receiver, allowWrap, exceptionOnCollisions);
-        });
-      } else {
-        if(Util.isString(giver)) {
-          giver = Injector.getDependency(giver);
-        }
-        mergeObjects(giver, receiver, allowWrap, exceptionOnCollisions);
-      }
-
-      return receiver;
     }
+    return str;
+  }
+
+  function clear(obj) {
+    var prop;
+    for(prop in obj) {
+      if(obj.hasOwnProperty(prop)) {
+        delete obj[prop];
+      }
+    }
+    return obj;
+  }
+
+  function clone(obj) {
+    return merge(obj);
+  }
+
+  function merge(source, destination, exceptionOnCollisions) {
+    processDependencies(source, function(sourceObj) {
+      destination = mergeObject(sourceObj, destination, false, exceptionOnCollisions);
+    });
+
+    return destination;
+  }
+
+  function wrap(source, destination) {
+    processDependencies(source, function(sourceObj) {
+      destination = mergeObject(sourceObj, destination, true);
+    });
+
+    return destination;
+  }
+
+  return {
+    print: print,
+    clear: clear,
+    clone: clone,
+    quickClone: quickClone,
+    merge: merge,
+    quickMerge: quickMerge,
+    wrap: wrap,
+    augment: augment,
+    replaceMethod: replaceMethod
   };
 });
 /**
@@ -592,6 +612,7 @@ kilo('Pool', [], function() {
     return newObject;
   }
 
+  // FIXME: replace with Obj.clear()
   function clearObject(obj) {
     var prop;
     for(prop in obj) {
@@ -691,4 +712,13 @@ kilo('rect', [], function() {
     intersectsRectX: intersectsRectX,
     intersectsRectY: intersectsRectY
   };
+});
+/**
+ * Created by Shaun on 11/2/2014.
+ */
+
+kilo('Wrap', ['Obj'], function(Obj) {
+  'use strict';
+
+  return Obj.wrap.bind(Obj);
 });

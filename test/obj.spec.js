@@ -62,4 +62,17 @@ describe('Kilo Supplemental - Obj Spec', function() {
       expect(newObject.foo()).toEqual('BAR');
     });
   });
+
+  describe('dependency', function() {
+    it('should be retrieved', function() {
+      kilo('TestObj', function() {
+        return { foo: 'bar' };
+      });
+
+      var TestObj = Obj.get('TestObj');
+
+      expect(TestObj);
+      expect(TestObj.foo).toEqual('bar');
+    });
+  });
 });

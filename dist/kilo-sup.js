@@ -629,23 +629,6 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
     };
   }
 
-  // FIXME: use Injector.process()
-  function processDependencies(deps, onProcessed) {
-    if(Util.isArray(deps)) {
-      deps.forEach(function(obj) {
-        if(Util.isString(obj)) {
-          obj = Injector.getDependency(obj);
-        }
-        onProcessed(obj);
-      });
-    } else {
-      if(Util.isString(deps)) {
-        deps = Injector.getDependency(deps);
-      }
-      onProcessed(deps);
-    }
-  }
-
   function replaceMethod(context, oldMethod, newMethod, message) {
     Object.keys(context).forEach(function(prop) {
       if(context[prop] === oldMethod) {
@@ -700,7 +683,7 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
   }
 
   function merge(source, destination, exceptionOnCollisions) {
-    processDependencies(source, function(sourceObj) {
+    Injector.process(source, function(sourceObj) {
       destination = mergeObject(sourceObj, destination, false, exceptionOnCollisions);
     });
 
@@ -708,7 +691,7 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
   }
 
   function wrap(source, destination) {
-    processDependencies(source, function(sourceObj) {
+    Injector.process(source, function(sourceObj) {
       destination = mergeObject(sourceObj, destination, true);
     });
 

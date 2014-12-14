@@ -1,13 +1,18 @@
 describe('Kilo Supplemental - Obj Spec', function() {
-  var Obj = kilo('Obj'), BaseObject;
+  var Obj, BaseObject;
 
-  beforeEach(function() {
+  beforeEach(function(done) {
     BaseObject = {
       foo: function() {
         return 'bar';
       },
       baz: 1
     };
+
+    use('Obj', function(_Obj) {
+      Obj = _Obj;
+      done();
+    });
   });
 
   describe('base object', function() {
@@ -60,19 +65,6 @@ describe('Kilo Supplemental - Obj Spec', function() {
       expect(newObject.foo).not.toBe(undefined);
       expect(newObject.baz).not.toBe(undefined);
       expect(newObject.foo()).toEqual('BAR');
-    });
-  });
-
-  describe('dependency', function() {
-    it('should be retrieved', function() {
-      kilo('TestObj', function() {
-        return { foo: 'bar' };
-      });
-
-      var TestObj = Obj.get('TestObj');
-
-      expect(TestObj);
-      expect(TestObj.foo).toEqual('bar');
     });
   });
 });

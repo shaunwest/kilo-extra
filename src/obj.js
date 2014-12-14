@@ -60,6 +60,7 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
     };
   }
 
+  // FIXME: use Injector.process()
   function processDependencies(deps, onProcessed) {
     if(Util.isArray(deps)) {
       deps.forEach(function(obj) {
@@ -101,15 +102,6 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
       }
     }
     return destination;
-  }
-
-  function get(objOrList) {
-    var result;
-    processDependencies(objOrList, function(sourceObj) {
-      result = sourceObj;
-    });
-
-    return result;
   }
 
   function print(obj) {
@@ -155,7 +147,6 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
   }
 
   return {
-    get: get,
     print: print,
     clear: clear,
     clone: clone,

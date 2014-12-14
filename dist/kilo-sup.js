@@ -2,15 +2,14 @@
  * Created by Shaun on 5/1/14.
  */
 
-var kilo = (function(id) {
+(function(id) {
   'use strict';
 
-  var core, Util, Injector, appConfig = {}, gids = {}, allElements, previousOwner = undefined;
+  var core, Util, Injector, types, appConfig = {}, gids = {}, allElements, elementMap = {}, previousOwner = undefined;
   var CONSOLE_ID = id;
 
   Util = {
     isDefined: function(value) { return (typeof value !== 'undefined'); },
-    //isObject: function(value) { return (value !== null && typeof value === 'object'); },
     isBoolean: function(value) { return (typeof value === 'boolean'); },
     def: function(value, defaultValue) { return (typeof value === 'undefined') ? defaultValue : value; },
     error: function(message) { throw new Error(CONSOLE_ID + ': ' + message); },
@@ -29,91 +28,155 @@ var kilo = (function(id) {
     }
   };
 
-  ['Array', 'Object', 'Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'HTMLImageElement'].
-    forEach(function(name) {
-      Util['is' + name] = function(obj) {
-        return Object.prototype.toString.call(obj) === '[object ' + name + ']';
-      };
-    });
+  types = ['Array', 'Object', 'Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp', 'HTMLImageElement'];
+  for(var i = 0; i < types.length; i++) {
+    Util['is' + types[i]] = (function(type) { 
+      return function(obj) {
+        return Object.prototype.toString.call(obj) === '[object ' + type + ']';
+      }; 
+    })(types[i]);
+  }
 
   Injector = {
     unresolved: {},
     modules: {},
     register: function(key, deps, func, scope) {
+      this.unresolve(key);
       this.unresolved[key] = {deps: deps, func: func, scope: scope};
       return this;
+    },
+    unresolve: function(key) {
+      if(this.modules[key]) {
+        delete this.modules[key];
+      }
     },
     setModule: function(key, module) { // save a module without doing dependency resolution
       this.modules[key] = module;
       return this;
     },
-    getDependency: function(key) {
+    getDependency: function(key, cb) {
       var module = this.modules[key];
       if(module) {
-        return module;
+        cb(module);
+        return;
       }
 
       module = this.unresolved[key];
       if(!module) {
         Util.warn('Module \'' + key + '\' not found');
-        return null;
+        return;
       }
 
       Util.log('Resolving dependencies for \'' + key + '\'');
-      module = this.modules[key] = this.resolveAndApply(module.deps, module.func, module.scope);
-      if(Util.isObject(module)) {
-        module.getType = function() { return key; };
-      }
-      delete this.unresolved[key];
-      return module;
+      this.resolveAndApply(module.deps, module.func, module.scope, function(module) {
+        if(Util.isObject(module)) {
+          module.getType = function() { return key; };
+        }
+        cb(module);
+      });
+
+      return;
     },
-    resolve: function(deps, func, scope) {
+    resolve: function(deps, cb) {
       var dep, depName, args = [], i;
+      if(!deps || !deps.length) {
+        cb();
+        return;        
+      }
       for(i = 0; i < deps.length; i++) {
         depName = deps[i];
-        dep = this.getDependency(depName);
-        if(dep) {
-          args.push(dep);
-        } else {
-          Util.warn('Can\'t resolve ' + depName);
-        }
+        this.getDependency(depName, function(dep) {
+          if(dep) {
+            args.push(dep);
+          } else {
+            Util.error('Can\'t resolve ' + depName);
+          }
+
+          if(args.length === deps.length) {
+            cb(args);    
+          }
+        });
       }
-      return args;
     },
     apply: function(args, func, scope) {
-      return func.apply(scope || core, args);
+      var result = func.apply(scope || core, args);
+      registerDefinitionObject(result);
+      return result;
     },
-    resolveAndApply: function(deps, func, scope) {
-      return this.apply(this.resolve(deps), func, scope);
+    resolveAndApply: function(deps, func, scope, cb) {
+      var that = this;
+      this.resolve(deps, function(args) {
+        var result = that.apply(args, func, scope);
+        if(cb) {
+          cb(result);
+        }
+      });
+    },
+    process: function(deps, cb) {
+      if(Util.isArray(deps)) {
+        deps.forEach(function(obj) {
+          if(Util.isString(obj)) {
+            this.getDependency(obj, function(obj) {
+              cb(obj);
+            });
+          } else {
+            cb(obj);
+          }
+        });
+      } else {
+        if(Util.isString(deps)) {
+          this.getDependency(deps, function(deps) {
+            cb(deps);
+          });
+        } else {
+          cb(deps);
+        }
+      }
     }
   };
-
-  /** add these basic modules to the injector */
-  Injector
-    .setModule('helper', Util).setModule('Helper', Util).setModule('Util', Util)
-    .setModule('injector', Injector).setModule('Injector', Injector)
-    .setModule('appConfig', appConfig);
 
   /** run onReady when document readyState is 'complete' */
   function onDocumentReady(onReady) {
     var readyStateCheckInterval;
-    if (document.readyState === 'complete') {
-      onReady();
+    if(!onReady) return;
+    if(document.readyState === 'complete') {
+      onReady(document);
     } else {
       readyStateCheckInterval = setInterval(function () {
-        if (document.readyState === 'complete') {
-          onReady();
+        if(document.readyState === 'complete') {
+          onReady(document);
           clearInterval(readyStateCheckInterval);
         }
       }, 10);
     }
   }
 
+  function registerDefinitionObject(result) {
+    var key;
+    if(Util.isObject(result)) {
+      for(key in result) {
+        if(result.hasOwnProperty(key)) {
+          Injector.register(key, [], (
+            function(func) {
+              return function() { return func; };
+            }
+          )(result[key]));
+        }
+      }
+    }
+  }
+
   /** the main interface */
   core = function(keyOrDeps, depsOrFunc, funcOrScope, scope) {
+    var result, key;
+
     // get dependencies
     if(Util.isArray(keyOrDeps)) {
       Injector.resolveAndApply(keyOrDeps, depsOrFunc, funcOrScope);
+
+    // no dependencies, just a function (and optionally a scope)
+    } else if(Util.isFunction(keyOrDeps)) {
+      Injector.apply([], keyOrDeps, depsOrFunc);
 
     // register a new module (with dependencies)
     } else if(Util.isArray(depsOrFunc) && Util.isFunction(funcOrScope)) {
@@ -122,19 +185,64 @@ var kilo = (function(id) {
     // register a new module (without dependencies)
     } else if(Util.isFunction(depsOrFunc)) {
       Injector.register(keyOrDeps, [], depsOrFunc, funcOrScope);
-
-    // get a module
-    } else if(keyOrDeps && !Util.isDefined(depsOrFunc)) {
-      return Injector.getDependency(keyOrDeps);
     }
 
     return null;
   };
 
+  core.use = function(deps, func, scope) {
+    if(Util.isString(deps)) {
+      deps = [deps];      
+    }
+    core(deps, func, scope);
+  };
+  core.register = function(key, depsOrFunc, funcOrScope, scope) {
+    core(key, depsOrFunc, funcOrScope, scope);
+  };
+  core.unresolve = function(key) {
+    Injector.unresolve(key);
+  };
   core.noConflict = function() {
     window[id] = previousOwner;
     return core;
   };
+
+  function findElement(elementId, elements, cb) {
+    var i, numElements, selectedElement;
+
+    for(i = 0, numElements = elements.length; i < numElements; i++) {
+      selectedElement = elements[i];
+      if(selectedElement.hasAttribute('data-' + elementId)) {
+        if(!elementMap[elementId]) {
+          elementMap[elementId] = [];
+        }
+        elementMap[elementId].push(selectedElement);
+        cb(selectedElement);
+      }
+    }
+  }
+
+  function executeElement(elementId, elements, deps, func, containerElement) {
+    if(elementMap.hasOwnProperty(elementId)) {
+      Util.warn('element \'' + elementId + '\' already defined');
+      elementMap[elementId].forEach(function(element) {
+        callElementFunc(element);
+      });
+    } else {
+      findElement(elementId, elements, callElementFunc);
+    }
+
+    function callElementFunc(element) {
+      var context = (containerElement) ? {container: containerElement, element: element} : element;
+      if(deps) {
+        func.apply(context, Injector.resolve(deps));
+      } else {
+        func.call(context);
+      }
+    }
+  }
+
+  // TODO: decide if element() will be moved to new package (kilo-element)
   core.element = function(elementId, funcOrDeps, func) {
     var deps;
 
@@ -146,9 +254,8 @@ var kilo = (function(id) {
       Util.error('element: second argument should be function or dependency array.');
     }
 
-    onDocumentReady(function() {
-      var i, body, numElements, selectedElement;
-
+    onDocumentReady(function(document) {
+      var body;
       if(!allElements) {
         body = document.getElementsByTagName('body');
         if(!body || !body[0]) {
@@ -157,15 +264,30 @@ var kilo = (function(id) {
         allElements = body[0].querySelectorAll('*');
       }
 
-      for(i = 0, numElements = allElements.length; i < numElements; i++) {
-        selectedElement = allElements[i];
-        if(selectedElement.hasAttribute('data-' + elementId) || selectedElement.hasAttribute(elementId)){
-          if(deps) {
-            func.apply(selectedElement, Injector.resolve(deps));
-          } else {
-            func.call(selectedElement);
-          }
-        }
+      executeElement(elementId, allElements, deps, func);
+    });
+
+    return this;
+  };
+  
+  core.subElement = function(elementId, containerId, funcOrDeps, func) {
+    var deps;
+
+    if(Util.isFunction(funcOrDeps)) {
+      func = funcOrDeps;
+    } else if(Util.isArray(funcOrDeps)) {
+      deps = funcOrDeps;
+    } else {
+      Util.error('subElement: third argument should be function or dependency array.');
+    }
+
+    onDocumentReady(function() {
+      var i, elements, numContainers, containerElement;
+      var containerElements = elementMap[containerId];
+      for(i = 0, numContainers = containerElements.length; i < numContainers; i++) {
+        containerElement = containerElements[i];
+        elements = containerElement.querySelectorAll('*');
+        executeElement(elementId, elements, deps, func, containerElement);
       }
     });
 
@@ -174,15 +296,24 @@ var kilo = (function(id) {
   core.onDocumentReady = core.ready = onDocumentReady;
   core.log = true;
 
-  /** create global reference to core */
+  /** add these basic modules to the injector */
+  Injector
+    .setModule('helper', Util).setModule('Helper', Util).setModule('Util', Util)
+    .setModule('injector', Injector).setModule('Injector', Injector)
+    .setModule('Element', core.element).setModule('SubElement', core.subElement)
+    .setModule('appConfig', appConfig);
+
+  /** create global references to core */
   if(window[id]) {
     Util.warn('a preexisting value at namespace \'' + id + '\' has been overwritten.');
     previousOwner = window[id];
   }
   window[id] = core;
+  if(!window.register) window.register = core.register;
+  if(!window.use) window.use = core.use;
+
   return core;
 })('kilo');
-
 /**
  * Created by Shaun on 10/18/14.
  */
@@ -264,7 +395,7 @@ kilo('Func', [], function() {
  * Created by Shaun on 6/4/14.
  */
 
-kilo('HashArray', [], function() {
+register('HashArray', function() {
   'use strict';
 
   function HashArray() {
@@ -498,6 +629,7 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
     };
   }
 
+  // FIXME: use Injector.process()
   function processDependencies(deps, onProcessed) {
     if(Util.isArray(deps)) {
       deps.forEach(function(obj) {
@@ -539,15 +671,6 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
       }
     }
     return destination;
-  }
-
-  function get(objOrList) {
-    var result;
-    processDependencies(objOrList, function(sourceObj) {
-      result = sourceObj;
-    });
-
-    return result;
   }
 
   function print(obj) {
@@ -593,7 +716,6 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
   }
 
   return {
-    get: get,
     print: print,
     clear: clear,
     clone: clone,

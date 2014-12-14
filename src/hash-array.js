@@ -2,7 +2,7 @@
  * Created by Shaun on 6/4/14.
  */
 
-kilo('HashArray', [], function() {
+register('HashArray', function() {
   'use strict';
 
   function HashArray() {

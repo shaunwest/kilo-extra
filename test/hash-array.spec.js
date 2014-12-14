@@ -1,12 +1,16 @@
 describe('Kilo Data HashArray Spec', function() {
-  var HashArray = kilo('HashArray'), hashArray;
+  var hashArray;
 
-  beforeEach(function(){
-    hashArray = new HashArray();
-    hashArray.set('a', 1);
-    hashArray.set('b', 2);
-    hashArray.set('c', 3);
-    hashArray.set('d', 4);
+  beforeEach(function(done) {
+    use('HashArray', function(HashArray) {
+      hashArray = new HashArray();
+      hashArray.set('a', 1);
+      hashArray.set('b', 2);
+      hashArray.set('c', 3);
+      hashArray.set('d', 4);
+
+      done();
+    }); 
   });
 
   describe('keys', function() {

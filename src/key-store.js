@@ -4,7 +4,7 @@
  * This is a decorator for HashArray. It adds automatic id management.
  */
 
-kilo('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
+register('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
   'use strict';
 
   function KeyStore() {

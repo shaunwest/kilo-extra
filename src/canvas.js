@@ -2,7 +2,7 @@
  * Created by Shaun on 10/18/14.
  */
 
-kilo('Canvas', [], function() {
+register('Canvas', [], function() {
   'use strict';
 
   return {

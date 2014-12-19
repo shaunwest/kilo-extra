@@ -2,7 +2,7 @@
  * Created by Shaun on 7/6/14.
  */
 
-kilo('Func', [], function() {
+register('Func', [], function() {
   'use strict';
 
   function partial(f) {

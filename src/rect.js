@@ -2,7 +2,7 @@
  * Created by Shaun on 7/16/14.
  */
 
-kilo('rect', [], function() {
+register('rect', [], function() {
   'use strict';
 
   function containsPoint(x, y, rect) {

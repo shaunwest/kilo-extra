@@ -2,7 +2,7 @@
  * Created by Shaun on 6/28/14.
  */
 
-kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
+register('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
   'use strict';
 
   function mergeObject(source, destination, allowWrap, exceptionOnCollisions) {

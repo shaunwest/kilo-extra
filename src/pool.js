@@ -2,7 +2,7 @@
  * Created by Shaun on 7/4/14.
  */
 
-kilo('Pool', [], function() {
+register('Pool', [], function() {
   'use strict';
 
   var objects = [];

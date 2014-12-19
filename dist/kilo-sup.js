@@ -56,6 +56,7 @@
     },
     getDependency: function(key, cb) {
       var module = this.modules[key];
+
       if(module) {
         cb(module);
         return;
@@ -63,7 +64,13 @@
 
       module = this.unresolved[key];
       if(!module) {
-        Util.warn('Module \'' + key + '\' not found');
+        getElement(key, function(element) {
+          if(element) {
+            cb(element);
+          } else {
+            Util.warn('Module \'' + key + '\' not found');
+          }
+        });
         return;
       }
 
@@ -100,7 +107,6 @@
     },
     apply: function(args, func, scope) {
       var result = func.apply(scope || core, args);
-      registerDefinitionObject(result);
       return result;
     },
     resolveAndApply: function(deps, func, scope, cb) {
@@ -113,8 +119,10 @@
       });
     },
     process: function(deps, cb) {
+      var i, numDeps, obj;
       if(Util.isArray(deps)) {
-        deps.forEach(function(obj) {
+        for(i = 0, numDeps = deps.length; i < numDeps; i++) {
+          obj = deps[i]; 
           if(Util.isString(obj)) {
             this.getDependency(obj, function(obj) {
               cb(obj);
@@ -122,7 +130,7 @@
           } else {
             cb(obj);
           }
-        });
+        }
       } else {
         if(Util.isString(deps)) {
           this.getDependency(deps, function(deps) {
@@ -222,20 +230,63 @@
     }
   }
 
+  function getElement(elementId, cb) {
+    onDocumentReady(function(document) {
+      var body;
+      var i, numElements, element, bracketIndex;
+      if(!allElements) {
+        body = document.getElementsByTagName('body');
+        if(!body || !body[0]) {
+          return;
+        }
+        allElements = body[0].querySelectorAll('*');
+      }
+
+      /*findElement(elementId, allElements, function(element) {
+        cb(element);    
+      });*/
+
+      bracketIndex = elementId.indexOf('[]');
+      if(bracketIndex !== -1) {
+        elementId = elementId.substring(0, bracketIndex);
+      }
+      for(i = 0, numElements = allElements.length; i < numElements; i++) {
+        element = allElements[i];
+        if(element.hasAttribute('data-' + elementId)) {
+          if(!elementMap[elementId]) {
+            elementMap[elementId] = [];
+          }
+          elementMap[elementId].push(element);
+        }
+      }
+      if(elementMap[elementId]) {
+        if(bracketIndex === -1) {
+          cb(elementMap[elementId][0]);
+        } else {
+          cb(elementMap[elementId]);
+        }
+      }
+    }); 
+  }
+
   function executeElement(elementId, elements, deps, func, containerElement) {
-    if(elementMap.hasOwnProperty(elementId)) {
-      Util.warn('element \'' + elementId + '\' already defined');
+    /*if(elementMap.hasOwnProperty(elementId)) {
+      //Util.warn('element \'' + elementId + '\' already defined'); // Don't need to report this
       elementMap[elementId].forEach(function(element) {
         callElementFunc(element);
       });
     } else {
       findElement(elementId, elements, callElementFunc);
-    }
+    }*/
+
+    findElement(elementId, elements, callElementFunc);
 
     function callElementFunc(element) {
       var context = (containerElement) ? {container: containerElement, element: element} : element;
       if(deps) {
-        func.apply(context, Injector.resolve(deps));
+        Injector.resolve(deps, function(args) {
+          func.apply(context, args);
+        });
       } else {
         func.call(context);
       }
@@ -301,6 +352,7 @@
     .setModule('helper', Util).setModule('Helper', Util).setModule('Util', Util)
     .setModule('injector', Injector).setModule('Injector', Injector)
     .setModule('Element', core.element).setModule('SubElement', core.subElement)
+    .setModule('registerAll', registerDefinitionObject)
     .setModule('appConfig', appConfig);
 
   /** create global references to core */
@@ -318,7 +370,7 @@
  * Created by Shaun on 10/18/14.
  */
 
-kilo('Canvas', [], function() {
+register('Canvas', [], function() {
   'use strict';
 
   return {
@@ -342,7 +394,7 @@ kilo('Canvas', [], function() {
  * Created by Shaun on 8/3/14.
  */
 
-kilo('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
+register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {
@@ -356,7 +408,7 @@ kilo('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
  * Created by Shaun on 7/6/14.
  */
 
-kilo('Func', [], function() {
+register('Func', [], function() {
   'use strict';
 
   function partial(f) {
@@ -492,7 +544,7 @@ register('HashArray', function() {
  * This is a decorator for HashArray. It adds automatic id management.
  */
 
-kilo('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
+register('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
   'use strict';
 
   function KeyStore() {
@@ -561,7 +613,7 @@ kilo('KeyStore', ['HashArray', 'Util'], function(HashArray, Util) {
  * Created by Shaun on 11/2/2014.
  */
 
-kilo('Merge', ['Obj'], function(Obj) {
+register('Merge', ['Obj'], function(Obj) {
   'use strict';
 
   return Obj.merge.bind(Obj);
@@ -571,7 +623,7 @@ kilo('Merge', ['Obj'], function(Obj) {
  * Created by Shaun on 6/28/14.
  */
 
-kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
+register('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func, Pool) {
   'use strict';
 
   function mergeObject(source, destination, allowWrap, exceptionOnCollisions) {
@@ -714,7 +766,7 @@ kilo('Obj', ['Injector', 'Util', 'Func', 'Pool'], function(Injector, Util, Func,
  * Created by Shaun on 7/4/14.
  */
 
-kilo('Pool', [], function() {
+register('Pool', [], function() {
   'use strict';
 
   var objects = [];
@@ -756,7 +808,7 @@ kilo('Pool', [], function() {
  * Created by Shaun on 7/16/14.
  */
 
-kilo('rect', [], function() {
+register('rect', [], function() {
   'use strict';
 
   function containsPoint(x, y, rect) {
@@ -832,7 +884,7 @@ kilo('rect', [], function() {
  * Created by Shaun on 11/2/2014.
  */
 
-kilo('Wrap', ['Obj'], function(Obj) {
+register('Wrap', ['Obj'], function(Obj) {
   'use strict';
 
   return Obj.wrap.bind(Obj);

@@ -5,7 +5,7 @@
 (function(id) {
   'use strict';
 
-  var core, Util, Injector, types, appConfig = {}, gids = {}, allElements, elementMap = {}, previousOwner = undefined;
+  var core, Util, Injector, types, appConfig = {}, gids = {}, allElements, previousOwner = undefined;
   var CONSOLE_ID = id;
 
   Util = {
@@ -49,22 +49,31 @@
       if(this.modules[key]) {
         delete this.modules[key];
       }
+      return this;
     },
     setModule: function(key, module) { // save a module without doing dependency resolution
       this.modules[key] = module;
       return this;
     },
     getDependency: function(key, cb) {
-      var module = this.modules[key];
+      var modules, module;
+
+      modules = this.modules;
+      module = modules[key];
 
       if(module) {
         cb(module);
         return;
       }
 
+      if(key.indexOf('/') != -1) {
+        httpGet(key, cb);
+        return;
+      }
+
       module = this.unresolved[key];
       if(!module) {
-        getElement(key, function(element) {
+        getElement(key, null, function(element) {
           if(element) {
             cb(element);
           } else {
@@ -79,31 +88,41 @@
         if(Util.isObject(module)) {
           module.getType = function() { return key; };
         }
+        modules[key] = module;
         cb(module);
       });
 
       return;
     },
-    resolve: function(deps, cb) {
-      var dep, depName, args = [], i;
-      if(!deps || !deps.length) {
-        cb();
-        return;        
-      }
-      for(i = 0; i < deps.length; i++) {
-        depName = deps[i];
-        this.getDependency(depName, function(dep) {
-          if(dep) {
-            args.push(dep);
-          } else {
-            Util.error('Can\'t resolve ' + depName);
-          }
+    resolve: function(deps, cb, index, results) {
+      var dep, depName;
+      var that = this; // FIXME
 
-          if(args.length === deps.length) {
-            cb(args);    
-          }
-        });
+      if(!deps) {
+        done();
+        return;
       }
+
+      index = Util.def(index, 0);
+
+      depName = deps[index];
+      if(!depName) {
+        cb(results);
+        return;
+      }
+      
+      this.getDependency(depName, function(dep) {
+        if(!results) {
+          results = [];
+        }
+        if(dep) {
+          results.push(dep);
+        } else {
+          Util.error('Can\'t resolve ' + depName);
+        }
+
+        that.resolve(deps, cb, index + 1, results);    
+      });
     },
     apply: function(args, func, scope) {
       var result = func.apply(scope || core, args);
@@ -174,185 +193,141 @@
     }
   }
 
-  /** the main interface */
-  core = function(keyOrDeps, depsOrFunc, funcOrScope, scope) {
-    var result, key;
-
-    // get dependencies
-    if(Util.isArray(keyOrDeps)) {
-      Injector.resolveAndApply(keyOrDeps, depsOrFunc, funcOrScope);
-
-    // no dependencies, just a function (and optionally a scope)
-    } else if(Util.isFunction(keyOrDeps)) {
-      Injector.apply([], keyOrDeps, depsOrFunc);
-
-    // register a new module (with dependencies)
-    } else if(Util.isArray(depsOrFunc) && Util.isFunction(funcOrScope)) {
-      Injector.register(keyOrDeps, depsOrFunc, funcOrScope, scope);
-
-    // register a new module (without dependencies)
-    } else if(Util.isFunction(depsOrFunc)) {
-      Injector.register(keyOrDeps, [], depsOrFunc, funcOrScope);
-    }
-
-    return null;
-  };
-
-  core.use = function(deps, func, scope) {
-    if(Util.isString(deps)) {
-      deps = [deps];      
-    }
-    core(deps, func, scope);
-  };
-  core.register = function(key, depsOrFunc, funcOrScope, scope) {
-    core(key, depsOrFunc, funcOrScope, scope);
-  };
-  core.unresolve = function(key) {
-    Injector.unresolve(key);
-  };
-  core.noConflict = function() {
-    window[id] = previousOwner;
-    return core;
-  };
-
-  function findElement(elementId, elements, cb) {
-    var i, numElements, selectedElement;
-
-    for(i = 0, numElements = elements.length; i < numElements; i++) {
-      selectedElement = elements[i];
-      if(selectedElement.hasAttribute('data-' + elementId)) {
-        if(!elementMap[elementId]) {
-          elementMap[elementId] = [];
-        }
-        elementMap[elementId].push(selectedElement);
-        cb(selectedElement);
-      }
-    }
-  }
-
-  function getElement(elementId, cb) {
+  // TODO: performance
+  function getElement(elementId, container, cb) {
     onDocumentReady(function(document) {
-      var body;
-      var i, numElements, element, bracketIndex;
-      if(!allElements) {
-        body = document.getElementsByTagName('body');
-        if(!body || !body[0]) {
-          return;
+      var i, numElements, element, elements, bracketIndex, results = [];
+      if(!container) {
+        if(!allElements) {
+          container = document.getElementsByTagName('body');
+          if(!container || !container[0]) {
+            return;
+          }
+          allElements = container[0].querySelectorAll('*');
         }
-        allElements = body[0].querySelectorAll('*');
+        elements = allElements;
+      } else {
+        elements = container.querySelectorAll('*');
       }
-
-      /*findElement(elementId, allElements, function(element) {
-        cb(element);    
-      });*/
 
       bracketIndex = elementId.indexOf('[]');
       if(bracketIndex !== -1) {
         elementId = elementId.substring(0, bracketIndex);
       }
-      for(i = 0, numElements = allElements.length; i < numElements; i++) {
-        element = allElements[i];
+      for(i = 0, numElements = elements.length; i < numElements; i++) {
+        element = elements[i];
         if(element.hasAttribute('data-' + elementId)) {
-          if(!elementMap[elementId]) {
-            elementMap[elementId] = [];
-          }
-          elementMap[elementId].push(element);
+          results.push(element);
         }
       }
-      if(elementMap[elementId]) {
-        if(bracketIndex === -1) {
-          cb(elementMap[elementId][0]);
-        } else {
-          cb(elementMap[elementId]);
-        }
+      if(bracketIndex === -1) {
+        cb(results[0]);
+      } else {
+        cb(results);
       }
     }); 
   }
 
-  function executeElement(elementId, elements, deps, func, containerElement) {
-    /*if(elementMap.hasOwnProperty(elementId)) {
-      //Util.warn('element \'' + elementId + '\' already defined'); // Don't need to report this
-      elementMap[elementId].forEach(function(element) {
-        callElementFunc(element);
-      });
-    } else {
-      findElement(elementId, elements, callElementFunc);
-    }*/
-
-    findElement(elementId, elements, callElementFunc);
-
-    function callElementFunc(element) {
-      var context = (containerElement) ? {container: containerElement, element: element} : element;
-      if(deps) {
-        Injector.resolve(deps, function(args) {
-          func.apply(context, args);
-        });
-      } else {
-        func.call(context);
-      }
+  function parseResponse(contentType, responseText) {
+    switch(contentType) {
+      case 'application/json':
+        return JSON.parse(responseText);
+      default:
+        return responseText;
     }
   }
 
-  // TODO: decide if element() will be moved to new package (kilo-element)
-  core.element = function(elementId, funcOrDeps, func) {
-    var deps;
+  function httpGet(url, onComplete, onProgress, contentType) {
+    var req = new XMLHttpRequest();
 
-    if(Util.isFunction(funcOrDeps)) {
-      func = funcOrDeps;
-    } else if(Util.isArray(funcOrDeps)) {
-      deps = funcOrDeps;
-    } else {
-      Util.error('element: second argument should be function or dependency array.');
+    if(onProgress) {
+      req.addEventListener('progress', function(event) {
+        onProgress(event.loaded, event.total);
+      }, false);
     }
 
-    onDocumentReady(function(document) {
-      var body;
-      if(!allElements) {
-        body = document.getElementsByTagName('body');
-        if(!body || !body[0]) {
-          return;
-        }
-        allElements = body[0].querySelectorAll('*');
+    req.onerror = function(event) {
+      Util.error('Network error.');
+    };
+
+    req.onload = function() {
+      var contentType = contentType || this.getResponseHeader('content-type');
+      switch(this.status) {
+        case 500:
+        case 404:
+          onComplete(this.statusText, this.status);
+          break;
+        case 304:
+        default:
+          onComplete(parseResponse(contentType, this.responseText), this.status);
       }
+    };
 
-      executeElement(elementId, allElements, deps, func);
-    });
+    req.open('get', url, true);
+    req.send();
+  }
 
-    return this;
-  };
-  
-  core.subElement = function(elementId, containerId, funcOrDeps, func) {
-    var deps;
-
-    if(Util.isFunction(funcOrDeps)) {
-      func = funcOrDeps;
-    } else if(Util.isArray(funcOrDeps)) {
-      deps = funcOrDeps;
-    } else {
-      Util.error('subElement: third argument should be function or dependency array.');
+  function register(key, depsOrFunc, funcOrScope, scope) {
+    // register a new module (with dependencies)
+    if(Util.isArray(depsOrFunc) && Util.isFunction(funcOrScope)) {
+      Injector.register(key, depsOrFunc, funcOrScope, scope);
+    } 
+     // register a new module (without dependencies)
+    else if(Util.isFunction(depsOrFunc)) {
+      Injector.register(key, [], depsOrFunc, funcOrScope);
     }
+  }
 
-    onDocumentReady(function() {
-      var i, elements, numContainers, containerElement;
-      var containerElements = elementMap[containerId];
-      for(i = 0, numContainers = containerElements.length; i < numContainers; i++) {
-        containerElement = containerElements[i];
-        elements = containerElement.querySelectorAll('*');
-        executeElement(elementId, elements, deps, func, containerElement);
-      }
-    });
+  core = function() {};
 
-    return this;
+  core.use = function(depsOrFunc, funcOrScope, scope) {
+    // one dependency
+    if(Util.isString(depsOrFunc)) {
+      Injector.resolveAndApply([depsOrFunc], funcOrScope, scope);
+    }
+    // multiple dependencies
+    else if (Util.isArray(depsOrFunc)) {
+      Injector.resolveAndApply(depsOrFunc, funcOrScope, scope);
+    } 
+    // no dependencies
+    else if(Util.isFunction(depsOrFunc)) {
+      Injector.apply([], depsOrFunc, funcOrScope);
+    }
   };
-  core.onDocumentReady = core.ready = onDocumentReady;
+
+  core.register = function(key, depsOrFunc, funcOrScope, scope) {
+    if(Util.isFunction(depsOrFunc) || Util.isFunction(funcOrScope)) {
+      return register(key, depsOrFunc, funcOrScope, scope);
+    }
+    return {
+      depends: function() {
+        depsOrFunc = Util.argsToArray(arguments);
+        return this;
+      },
+      factory: function(func, scope) {
+        register(key, depsOrFunc, func, scope)
+      }
+    };
+  };
+
+  core.unresolve = function(key) {
+    Injector.unresolve(key);
+  };
+
+  core.noConflict = function() {
+    window[id] = previousOwner;
+    return core;
+  };
+  core.onDocumentReady = onDocumentReady;
   core.log = true;
 
   /** add these basic modules to the injector */
   Injector
-    .setModule('helper', Util).setModule('Helper', Util).setModule('Util', Util)
-    .setModule('injector', Injector).setModule('Injector', Injector)
-    .setModule('Element', core.element).setModule('SubElement', core.subElement)
+    .setModule('Util', Util)
+    .setModule('Injector', Injector)
+    .setModule('element', getElement)
     .setModule('registerAll', registerDefinitionObject)
+    .setModule('httpGet', httpGet)
     .setModule('appConfig', appConfig);
 
   /** create global references to core */

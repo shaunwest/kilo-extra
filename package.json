@@ -1,8 +1,8 @@
 {
-  "name": "kilo-sup",
+  "name": "kilo-extra",
   "version": "0.0.1",
-  "description": "KiloJS Supplemental",
-  "main": "dist/kilo-sup.js",
+  "description": "KiloJS Extras",
+  "main": "dist/kilo-extra.js",
   "dependencies": {},
   "devDependencies": {
     "gulp": "^3.8.10",
@@ -21,12 +21,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/shaunwest/kilo-sup.git"
+    "url": "git://github.com/shaunwest/kilo-extra.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shaunwest/kilo-sup/issues"
+    "url": "https://github.com/shaunwest/kilo-extra/issues"
   },
-  "homepage": "https://github.com/shaunwest/kilo-sup"
+  "homepage": "https://github.com/shaunwest/kilo-extra"
 }

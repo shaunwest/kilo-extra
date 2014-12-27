@@ -1,12 +1,12 @@
 {
-  "name": "kilo-sup",
+  "name": "kilo-extra",
   "version": "0.0.1",
-  "homepage": "https://github.com/shaunwest/kilo-sup",
+  "homepage": "https://github.com/shaunwest/kilo-extra",
   "authors": [
     "Shaun West <shaunwest@gmail.com>"
   ],
-  "description": "KiloJS Supplemental Lib",
-  "main": "dist/kilo-sup.js",
+  "description": "KiloJS Extras",
+  "main": "dist/kilo-extra.js",
   "license": "MIT",
   "private": true,
   "ignore": [

@@ -18,10 +18,10 @@ gulp.task('clean', function() {
 
 gulp.task('build', function() {
   return gulp.src(['bower_components/kilo-core/src/kilo-core.js','src/**/*.js'])
-    .pipe(concat('kilo-sup.js'))
+    .pipe(concat('kilo-extra.js'))
     .pipe(gulp.dest('dist'))
     .pipe(uglify())
-    .pipe(rename('kilo-sup.min.js'))
+    .pipe(rename('kilo-extra.min.js'))
     .pipe(gulp.dest('dist'));
 });
 

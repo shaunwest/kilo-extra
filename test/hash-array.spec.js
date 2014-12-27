@@ -15,12 +15,14 @@ describe('Kilo Data HashArray Spec', function() {
 
   describe('keys', function() {
     it('should match', function() {
+      expect(hashArray);
       expect(hashArray.getKeys()).toEqual(['a', 'b', 'c', 'd']);
     });
   });
 
   describe('values', function() {
     it('should match', function() {
+      expect(hashArray);
       expect(hashArray.getValues()).toEqual([1, 2, 3, 4]);
     })
   })

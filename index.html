@@ -5,32 +5,25 @@
   <title>Kilo Extras</title>
   <script src="dist/kilo-extra.min.js"></script>
   <script>
-    kilo(['Util', 'HashArray'], function(Util, HashArray) {
-      'use strict';
+    use(['Util', 'HashArray', 'keys', 'values', 'value'], 
+      function(Util, HashArray, keys, values, value) {
+        'use strict';
 
-      var hashArray = new HashArray();
+        var hashArray = new HashArray();
 
-      hashArray.set('a', 1);
-      hashArray.set('b', 2);
-      hashArray.set('c', 3);
-      hashArray.set('d', 4);
+        hashArray.set('a', 1);
+        hashArray.set('b', 2);
+        hashArray.set('c', 3);
+        hashArray.set('d', 4);
 
-      kilo.element('keys', function() {
-        this.innerHTML = hashArray.getKeys();
-      });
-
-      kilo.element('values', function() {
-        this.innerHTML = hashArray.getValues();
-      });
-
-      kilo.element('value', function() {
-        this.innerHTML = hashArray.get('b');
-      });
+        keys.innerHTML = hashArray.getKeys();
+        values.innerHTML = hashArray.getValues();
+        value.innerHTML = hashArray.get('b');
     });
   </script>
 </head>
 <body>
-  <h1>Kilo Supplemental</h1>
+  <h1>Kilo Extra</h1>
   <div>hashArray = [a: 1, b: 2, c: 3, d: 4]</div>
   <div>Keys: <span data-keys></span></div>
   <div>Values: <span data-values></span></div>

@@ -17,7 +17,7 @@ gulp.task('clean', function() {
 });
 
 gulp.task('build', function() {
-  return gulp.src(['bower_components/kilo-core/src/kilo-core.js','src/**/*.js'])
+  return gulp.src(['bower_components/kilo/dist/kilo.js','src/**/*.js'])
     .pipe(concat('kilo-extra.js'))
     .pipe(gulp.dest('dist'))
     .pipe(uglify())

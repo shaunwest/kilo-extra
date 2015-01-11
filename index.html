@@ -5,8 +5,8 @@
   <title>Kilo Extras</title>
   <script src="dist/kilo-extra.min.js"></script>
   <script>
-    use(['Util', 'HashArray', 'keys', 'values', 'value'], 
-      function(Util, HashArray, keys, values, value) {
+    use(['Util', 'Http', 'HashArray', 'keys', 'values', 'value', 'file'], 
+      function(Util, Http, HashArray, keys, values, value, file) {
         'use strict';
 
         var hashArray = new HashArray();
@@ -19,6 +19,10 @@
         keys.innerHTML = hashArray.getKeys();
         values.innerHTML = hashArray.getValues();
         value.innerHTML = hashArray.get('b');
+
+        Http.get('./foo.json').then(function(response) {
+          file.innerHTML = response.data.Foo;
+        });
     });
   </script>
 </head>
@@ -28,5 +32,6 @@
   <div>Keys: <span data-keys></span></div>
   <div>Values: <span data-values></span></div>
   <div>Value 'b': <span data-value></span></div>
+  <div>File Contents: <span data-file></span><div>
 </body>
 </html>

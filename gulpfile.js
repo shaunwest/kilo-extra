@@ -17,7 +17,7 @@ gulp.task('clean', function() {
 });
 
 gulp.task('build', function() {
-  return gulp.src(['src/**/*.js'])
+  return gulp.src(['export.js', 'src/**/*.js'])
     .pipe(concat('kilo-extra.js'))
     .pipe(gulp.dest('dist'))
     .pipe(uglify())

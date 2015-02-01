@@ -15,7 +15,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      'bower_components/kilo/dist/kilo.js',
+      'bower_components/kilo/kilo.js',
       'export.js',
       'src/**/*.js',
       'test/**/*.spec.js'

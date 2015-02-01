@@ -2,6 +2,7 @@
  * Created by Shaun on 10/18/14.
  */
 
+/* UP FOR REMOVAL!
 register('Canvas', [], function() {
   'use strict';
 
@@ -21,4 +22,4 @@ register('Canvas', [], function() {
       context.closePath();
     }
   };
-});
+});*/

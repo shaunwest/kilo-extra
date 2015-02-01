@@ -12,6 +12,7 @@ if(typeof exports === 'object' && typeof require === 'function') {
  * Created by Shaun on 10/18/14.
  */
 
+/* UP FOR REMOVAL!
 register('Canvas', [], function() {
   'use strict';
 
@@ -31,12 +32,13 @@ register('Canvas', [], function() {
       context.closePath();
     }
   };
-});
+});*/
 /**
  * Created by Shaun on 8/3/14.
  */
 
-register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
+// UP FOR REMOVAL
+/*register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {
@@ -45,7 +47,7 @@ register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
     var newObject = Obj.mixin([TypeObject]);
     return newObject;
   };
-});
+});*/
 /**
  * Created by Shaun on 7/6/14.
  */
@@ -687,6 +689,32 @@ register('Wrap', ['Obj'], function(Obj) {
 
   return Obj.wrap.bind(Obj);
 });
+use(['Injector', 'Util'], function(Injector, Util) {
+  Injector.process = function(deps, cb) {
+    var i, numDeps, obj;
+    if(Util.isArray(deps)) {
+      for(i = 0, numDeps = deps.length; i < numDeps; i++) {
+        obj = deps[i]; 
+        if(Util.isString(obj)) {
+          this.getDependency(obj, function(obj) {
+            cb(obj);
+          });
+        } else {
+          cb(obj);
+        }
+      }
+    } else {
+      if(Util.isString(deps)) {
+        this.getDependency(deps, function(deps) {
+          cb(deps);
+        });
+      } else {
+        cb(deps);
+      }
+    }
+  }
+});
+
 // Production steps of ECMA-262, Edition 5, 15.4.4.18
 // Reference: http://es5.github.io/#x15.4.4.18
 if (!Array.prototype.forEach) {

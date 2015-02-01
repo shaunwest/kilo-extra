@@ -2,7 +2,8 @@
  * Created by Shaun on 8/3/14.
  */
 
-register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
+// UP FOR REMOVAL
+/*register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
   'use strict';
 
   return function(TypeObject) {
@@ -11,4 +12,4 @@ register('Factory', ['Obj', 'Pool'], function(Obj, Pool) {
     var newObject = Obj.mixin([TypeObject]);
     return newObject;
   };
-});
+});*/

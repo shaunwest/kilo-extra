@@ -3,7 +3,16 @@
 <head lang="en">
   <meta charset="UTF-8">
   <title>Kilo Extras</title>
-  <script src="dist/kilo-extra.min.js"></script>
+</head>
+<body>
+  <h1>Kilo Extra</h1>
+  <div>hashArray = [a: 1, b: 2, c: 3, d: 4]</div>
+  <div>Keys: <span data-keys></span></div>
+  <div>Values: <span data-values></span></div>
+  <div>Value 'b': <span data-value></span></div>
+  <div>File Contents: <span data-file></span><div>
+  <script src="bower_components/kilo/kilo.js"></script>
+  <script src="kilo-extra.js"></script>
   <script>
     use(['Util', 'Http', 'HashArray', 'keys', 'values', 'value', 'file'], 
       function(Util, Http, HashArray, keys, values, value, file) {
@@ -25,13 +34,5 @@
         });
     });
   </script>
-</head>
-<body>
-  <h1>Kilo Extra</h1>
-  <div>hashArray = [a: 1, b: 2, c: 3, d: 4]</div>
-  <div>Keys: <span data-keys></span></div>
-  <div>Values: <span data-values></span></div>
-  <div>Value 'b': <span data-value></span></div>
-  <div>File Contents: <span data-file></span><div>
 </body>
 </html>

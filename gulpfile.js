@@ -11,18 +11,18 @@ var runSequence = require('run-sequence');
 var clean = require('gulp-clean');
 var karmaConfig = __dirname + '/karma.conf.js';
 
-gulp.task('clean', function() {
+/*gulp.task('clean', function() {
   return gulp.src('dist', {read: false})
     .pipe(clean());
-});
+});*/
 
 gulp.task('build', function() {
   return gulp.src(['export.js', 'src/**/*.js'])
     .pipe(concat('kilo-extra.js'))
-    .pipe(gulp.dest('dist'))
+    .pipe(gulp.dest('.'))
     .pipe(uglify())
     .pipe(rename('kilo-extra.min.js'))
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('.'));
 });
 
 gulp.task('test', function(cb) {
@@ -43,5 +43,5 @@ gulp.task('ci', function(cb) {
 });
 
 gulp.task('default', function(cb) {
-  runSequence('test', 'clean', 'build', 'watch', cb);
+  runSequence('test', 'build', 'watch', cb);
 });
